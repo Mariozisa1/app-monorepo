@@ -133,6 +133,12 @@ class ServiceGas extends ServiceBase {
           };
         })
         .filter((item) => !!item),
+      feeBudget: feeInfo.feeBudget?.map((item)=>{
+        return {
+          ...item,
+          computationCostBase: new BigNumber(item.computationCost ?? 0).dividedBy(new BigNumber(item.gasPrice ?? 0).shiftedBy(feeInfo.feeDecimals)).toFixed(),
+        }
+      }),
     };
 
     // Since FIL's fee structure is similar to EIP1559, map FIL fees to EIP1559 format to reuse related logic
