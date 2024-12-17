@@ -3,7 +3,7 @@ const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 module.exports = {
   mode: 'production',
-  devtool: 'source-map',
+  devtool: 'hidden-source-map',
   output: {
     clean: true,
   },
