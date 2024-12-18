@@ -136,7 +136,6 @@ export function PriceLabel({
 
   const [settings] = useSettingsPersistAtom();
   const currency = settings.currencyInfo.symbol;
-  console.log('---price', price);
   return (
     <Stack
       opacity={opacity}
