@@ -66,23 +66,32 @@ export function calculateCkbTotalFee({
   return fee.shiftedBy(-feeInfo.common.feeDecimals).toFixed();
 }
 
-export function calculateSuiTotalFee({
-  feeInfo,
-}: {
-  feeInfo: IFeeInfoUnit;
-}) {
+export function calculateSuiTotalFee({ feeInfo }: { feeInfo: IFeeInfoUnit }) {
   const feeCostBase = feeInfo.feeBudget?.computationCostBase;
   const GAS_SAFE_OVERHEAD = 1000;
-  const computationCost = new BigNumber(feeCostBase ?? 0).times(new BigNumber(feeInfo.feeBudget?.gasPrice ?? 0).shiftedBy(feeInfo.common.feeDecimals))
-  const storageCost = new BigNumber(feeInfo.feeBudget?.storageCost ?? 0)
-  const storageRebate = new BigNumber(feeInfo.feeBudget?.storageRebate ?? 0)
+  const computationCost = new BigNumber(
+    feeCostBase ??
+      nilError('calculateSuiTotalFee ERROR: computationCostBase error'),
+  ).times(
+    new BigNumber(feeInfo.feeBudget?.gasPrice ?? 0).shiftedBy(
+      feeInfo.common.feeDecimals,
+    ),
+  );
+  const storageCost = new BigNumber(feeInfo.feeBudget?.storageCost ?? 0);
+  const storageRebate = new BigNumber(feeInfo.feeBudget?.storageRebate ?? 0);
   const safeOverhead = new BigNumber(GAS_SAFE_OVERHEAD).multipliedBy(1);
 
-  const baseComputationCostWithOverhead = new BigNumber(computationCost).plus(safeOverhead)
+  const baseComputationCostWithOverhead = new BigNumber(computationCost).plus(
+    safeOverhead,
+  );
 
-  const gasBudget = baseComputationCostWithOverhead.plus(storageCost).minus(storageRebate)
+  const gasBudget = baseComputationCostWithOverhead
+    .plus(storageCost)
+    .minus(storageRebate);
 
-  const gasUsed = gasBudget.gt(baseComputationCostWithOverhead) ? gasBudget : baseComputationCostWithOverhead
+  const gasUsed = gasBudget.gt(baseComputationCostWithOverhead)
+    ? gasBudget
+    : baseComputationCostWithOverhead;
   return gasUsed.multipliedBy(1.1);
 }
 
@@ -181,7 +190,9 @@ export function calculateTotalFeeRange({
   if (feeInfo.feeBudget) {
     const expectedFee = calculateSuiTotalFee({
       feeInfo,
-    }).shiftedBy(-feeInfo.common.feeDecimals).toFixed();
+    })
+      .shiftedBy(-feeInfo.common.feeDecimals)
+      .toFixed();
     return {
       min: nanToZeroString(expectedFee),
       max: nanToZeroString(expectedFee),

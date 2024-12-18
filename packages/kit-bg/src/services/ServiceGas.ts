@@ -133,11 +133,18 @@ class ServiceGas extends ServiceBase {
           };
         })
         .filter((item) => !!item),
-      feeBudget: feeInfo.feeBudget?.map((item)=>{
+      feeBudget: feeInfo.feeBudget?.map((item) => {
+        if (!item.computationCost || !item.gasPrice) {
+          throw new Error('computationCost or gasPrice is undefined');
+        }
         return {
           ...item,
-          computationCostBase: new BigNumber(item.computationCost ?? 0).dividedBy(new BigNumber(item.gasPrice ?? 0).shiftedBy(feeInfo.feeDecimals)).toFixed(),
-        }
+          computationCostBase: new BigNumber(item.computationCost)
+            .dividedBy(
+              new BigNumber(item.gasPrice).shiftedBy(feeInfo.feeDecimals),
+            )
+            .toFixed(),
+        };
       }),
     };
 

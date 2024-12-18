@@ -124,10 +124,11 @@ async function createTokenTransaction({
   } else {
     // Token transfer
     const [primaryCoin, ...otherCoins] = allCoins.filter(
-      (coin) => normalizeBfcCoinType(coin.coinType) === normalizeBfcCoinType(coinType),
+      (coin) =>
+        normalizeBfcCoinType(coin.coinType) === normalizeBfcCoinType(coinType),
     );
-    let currentAmount = new  BigNumber(primaryCoin.balance);
-    const targetAmount = new  BigNumber(amount);
+    let currentAmount = new BigNumber(primaryCoin.balance);
+    const targetAmount = new BigNumber(amount);
     const coinsToMerge = [];
 
     // merge coin from other utxo coins.

@@ -84,6 +84,10 @@ const DEFAULT_GAS_LIMIT_MAX = 15_000_000;
 const DEFAULT_FEER_ATE_MIN = 0;
 const DEFAULT_FEE_RATE_MAX = 1_000_000; // shared cross multi-networks
 
+// TODO: 最好提取至settings.ts
+const BENFEN_MIN_GAS_PRICE = 0.000_000_1;
+const BENFEN_MIN_GAS_BUDGET = 100_000;
+
 const getPresetIndex = (
   sendSelectedFee: IProps['sendSelectedFee'],
   feeSelectorItems: IProps['feeSelectorItems'],
@@ -316,6 +320,7 @@ function FeeEditor(props: IProps) {
       customFee?.gas,
       customFee?.gasEIP1559,
       customFee?.feeDot,
+      customFee?.feeBudget,
       watchAllFields.computeUnitPrice,
       watchAllFields.feeRate,
       watchAllFields.feeRateCkb,
@@ -327,6 +332,9 @@ function FeeEditor(props: IProps) {
       watchAllFields.dotExtraTip,
       watchAllFields.gasSuiPrice,
       watchAllFields.gasSuiBudget,
+      watchAllFields.computationCostBase,
+      watchAllFields.storageCost,
+      watchAllFields.storageRebate,
     ],
   );
 
@@ -692,16 +700,15 @@ function FeeEditor(props: IProps) {
     [feeSelectorItems, intl],
   );
 
-  // todo: hard code
   const handleValidateSuiGasBudget = useCallback(
     (value: string) => {
       const gasLimit = new BigNumber(value || 0);
       if (vaultSettings?.gasLimitValidationEnabled) {
-        if (gasLimit.isNaN() || gasLimit.isLessThan(100000)) {
+        if (gasLimit.isNaN() || gasLimit.isLessThan(BENFEN_MIN_GAS_BUDGET)) {
           return intl.formatMessage(
             { id: ETranslations.form_must_greater_then_value },
             {
-              value: 100000,
+              value: BENFEN_MIN_GAS_BUDGET,
             },
           );
         }
@@ -719,38 +726,22 @@ function FeeEditor(props: IProps) {
     [intl, vaultSettings?.gasLimitValidationEnabled],
   );
 
-  // TODO: 是否要判断最小值
   const handleValidateSuiGasPrice = useCallback(
     (value: string) => {
       const gasPrice = new BigNumber(value || 0);
-      const gasMinPrice = 0.0000001;
 
-
-      if (gasPrice.isNaN() || gasPrice.isLessThanOrEqualTo(0)) {
+      if (gasPrice.isNaN() || gasPrice.isLessThan(BENFEN_MIN_GAS_PRICE)) {
         return intl.formatMessage(
           { id: ETranslations.form_must_greater_then_value },
           {
-            value: 0,
+            value: BENFEN_MIN_GAS_PRICE,
           },
         );
       }
 
-      if (gasPrice.isLessThan(gasMinPrice)) {
-        return intl.formatMessage(
-          {
-            id: ETranslations.fee_fee_rate_too_low,
-          },
-          {
-            'feeParam': intl.formatMessage({
-              id: ETranslations.global_gas_price,
-            }),
-          },
-        )
-      }
-
       return true;
     },
-    [feeSelectorItems, intl, replaceTxMode, replaceTxOriginalFeeInfo?.feeBudget],
+    [intl],
   );
 
   const handleValidateComputeUnitPrice = useCallback((value: string) => {
@@ -1021,8 +1012,8 @@ function FeeEditor(props: IProps) {
                   replaceTxMode
                     ? null
                     : `${intl.formatMessage({
-                      id: ETranslations.form_max_base_fee_description,
-                    })}: ${customFee?.gasEIP1559.baseFeePerGas} ${feeSymbol}`
+                        id: ETranslations.form_max_base_fee_description,
+                      })}: ${customFee?.gasEIP1559.baseFeePerGas} ${feeSymbol}`
                 }
                 rules={{
                   required: true,
@@ -1171,7 +1162,10 @@ function FeeEditor(props: IProps) {
                   {
                     iconName: 'UndoOutline',
                     onPress: () => {
-                      form.setValue('gasSuiBudget', feeSelectorItems[0]?.feeInfo?.feeBudget?.budget ?? '0');
+                      form.setValue(
+                        'gasSuiBudget',
+                        feeSelectorItems[0]?.feeInfo?.feeBudget?.budget ?? '0',
+                      );
                       void form.trigger('gasSuiBudget');
                     },
                   },
@@ -1347,6 +1341,7 @@ function FeeEditor(props: IProps) {
     feeAlert,
     feeSymbol,
     form,
+    feeSelectorItems,
     handleFormValueOnChange,
     handleValidateComputeUnitPrice,
     handleValidateDotExtraTip,
@@ -1357,6 +1352,8 @@ function FeeEditor(props: IProps) {
     handleValidateGasPrice,
     handleValidateMaxBaseFee,
     handleValidatePriorityFee,
+    handleValidateSuiGasBudget,
+    handleValidateSuiGasPrice,
     intl,
     priorityFeeAlert,
     recommendGasLimit.gasLimit,
@@ -1456,12 +1453,12 @@ function FeeEditor(props: IProps) {
 
       feeInfoItems = [
         vaultSettings?.withL1BaseFee &&
-          new BigNumber(fee.common.baseFee ?? 0).gt(0)
+        new BigNumber(fee.common.baseFee ?? 0).gt(0)
           ? {
-            label: intl.formatMessage({ id: ETranslations.fee_l1_base_fee }),
-            customValue: fee.common.baseFee,
-            customSymbol: feeSymbol,
-          }
+              label: intl.formatMessage({ id: ETranslations.fee_l1_base_fee }),
+              customValue: fee.common.baseFee,
+              customSymbol: feeSymbol,
+            }
           : null,
         {
           label: intl.formatMessage({ id: ETranslations.fee_expected_fee }),
@@ -1501,7 +1498,9 @@ function FeeEditor(props: IProps) {
       });
 
       const maxFeeInNative = calculateTotalFeeNative({
-        amount: new BigNumber(watchAllFields.gasSuiBudget).shiftedBy(-feeDecimals),
+        amount: new BigNumber(watchAllFields.gasSuiBudget).shiftedBy(
+          -feeDecimals,
+        ),
         feeInfo: currFeeInfo,
       });
 
@@ -1512,12 +1511,12 @@ function FeeEditor(props: IProps) {
 
       feeInfoItems = [
         vaultSettings?.withL1BaseFee &&
-          new BigNumber(fee.common.baseFee ?? 0).gt(0)
+        new BigNumber(fee.common.baseFee ?? 0).gt(0)
           ? {
-            label: intl.formatMessage({ id: ETranslations.fee_l1_base_fee }),
-            customValue: fee.common.baseFee,
-            customSymbol: feeSymbol,
-          }
+              label: intl.formatMessage({ id: ETranslations.fee_l1_base_fee }),
+              customValue: fee.common.baseFee,
+              customSymbol: feeSymbol,
+            }
           : null,
         {
           label: intl.formatMessage({ id: ETranslations.global_gas_price }),
@@ -1559,12 +1558,12 @@ function FeeEditor(props: IProps) {
 
       feeInfoItems = [
         vaultSettings?.withL1BaseFee &&
-          new BigNumber(fee.common.baseFee ?? 0).gt(0)
+        new BigNumber(fee.common.baseFee ?? 0).gt(0)
           ? {
-            label: intl.formatMessage({ id: ETranslations.fee_l1_base_fee }),
-            customValue: fee.common.baseFee,
-            customSymbol: feeSymbol,
-          }
+              label: intl.formatMessage({ id: ETranslations.fee_l1_base_fee }),
+              customValue: fee.common.baseFee,
+              customSymbol: feeSymbol,
+            }
           : null,
         {
           label: intl.formatMessage({ id: ETranslations.global_gas_price }),
@@ -1714,6 +1713,7 @@ function FeeEditor(props: IProps) {
     estimateFeeParams?.estimateFeeParamsSol,
     feeSelectorItems,
     feeSymbol,
+    feeDecimals,
     intl,
     nativeSymbol,
     nativeTokenPrice,
