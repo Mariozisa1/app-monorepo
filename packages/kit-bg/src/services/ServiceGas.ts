@@ -134,16 +134,16 @@ class ServiceGas extends ServiceBase {
         })
         .filter((item) => !!item),
       feeBudget: feeInfo.feeBudget?.map((item) => {
-        if (!item.computationCost || !item.gasPrice) {
-          throw new Error('computationCost or gasPrice is undefined');
+        if (!item.gasPrice) {
+          throw new Error('gasPrice is undefined');
         }
         return {
           ...item,
-          computationCostBase: new BigNumber(item.computationCost)
+          computationCostBase: item.computationCost ? new BigNumber(item.computationCost)
             .dividedBy(
               new BigNumber(item.gasPrice).shiftedBy(feeInfo.feeDecimals),
             )
-            .toFixed(),
+            .toFixed() : '0',
         };
       }),
     };

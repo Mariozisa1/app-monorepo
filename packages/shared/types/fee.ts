@@ -50,7 +50,6 @@ export type IFeeDot = {
 };
 
 export type IFeeSui = {
-  //  computationCost, computationCostBase, storageCost, storageRebate, gasLimit
   budget: string;
   gasPrice: string;
   computationCost?: string;

@@ -355,9 +355,11 @@ export default class Vault extends VaultBase {
       const network = await this.getNetwork();
       const newTx = TransactionBlock.from(encodedTx.rawTx);
       newTx.setGasPrice(
-        new BigNumber(feeInfo.feeBudget.gasPrice)
-          .shiftedBy(network.feeMeta.decimals)
-          .toNumber(),
+        Number(
+          new BigNumber(feeInfo.feeBudget.gasPrice)
+            .shiftedBy(network.feeMeta.decimals)
+            .toFixed(),
+        ),
       );
 
       // Convert gasLimit to integer by ceiling the value

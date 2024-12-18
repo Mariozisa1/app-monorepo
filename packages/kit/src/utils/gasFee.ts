@@ -69,13 +69,11 @@ export function calculateCkbTotalFee({
 export function calculateSuiTotalFee({ feeInfo }: { feeInfo: IFeeInfoUnit }) {
   const feeCostBase = feeInfo.feeBudget?.computationCostBase;
   const GAS_SAFE_OVERHEAD = 1000;
-  const computationCost = new BigNumber(
-    feeCostBase ??
-      nilError('calculateSuiTotalFee ERROR: computationCostBase error'),
-  ).times(
-    new BigNumber(feeInfo.feeBudget?.gasPrice ?? 0).shiftedBy(
-      feeInfo.common.feeDecimals,
-    ),
+  const computationCost = new BigNumber(feeCostBase ?? 0).times(
+    new BigNumber(
+      feeInfo.feeBudget?.gasPrice ??
+        nilError('calculateSuiTotalFee ERROR: gasPrice error'),
+    ).shiftedBy(feeInfo.common.feeDecimals),
   );
   const storageCost = new BigNumber(feeInfo.feeBudget?.storageCost ?? 0);
   const storageRebate = new BigNumber(feeInfo.feeBudget?.storageRebate ?? 0);
