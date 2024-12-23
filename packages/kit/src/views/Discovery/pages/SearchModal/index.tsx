@@ -101,10 +101,14 @@ function SearchModal() {
         setSearchList([]);
         return;
       }
-      const logo =
+      let logo =
         await backgroundApiProxy.serviceDiscovery.buildWebsiteIconUrl(
           'https://google.com',
         );
+      if (!logo) {
+        // Fallback to direct Google favicon if the environment icon is unavailable
+        logo = 'https://www.google.com/favicon.ico';
+      }
       setSearchList([
         {
           dappId: SEARCH_ITEM_ID,
