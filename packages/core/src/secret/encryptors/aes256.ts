@@ -110,11 +110,16 @@ function encodePassword({
   });
 }
 
+/**
+ * @deprecated Use encryptAsync instead. This synchronous encryption method will be removed in a future version.
+ * @see encryptAsync
+ */
 function encrypt(
   password: string,
   data: Buffer | string,
   allowRawPassword?: boolean,
 ): Buffer {
+  console.warn('encrypt() is deprecated. Please use encryptAsync() instead.');
   if (!password) {
     throw new IncorrectPassword();
   }
@@ -140,11 +145,16 @@ export type IEncryptStringParams = {
  * @deprecated Use encryptStringAsync instead. This synchronous encryption method will be removed in a future version.
  * @see encryptStringAsync
  */
+/**
+ * @deprecated Use encryptStringAsync instead. This synchronous encryption method will be removed in a future version.
+ * @see encryptStringAsync
+ */
 function encryptString({
   password,
   data,
   dataEncoding = 'hex',
 }: IEncryptStringParams): string {
+  console.warn('encryptString() is deprecated. Please use encryptStringAsync() instead.');
   const bytes = encrypt(password, bufferUtils.toBuffer(data, dataEncoding));
   return bufferUtils.bytesToHex(bytes);
 }

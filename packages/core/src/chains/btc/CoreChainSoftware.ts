@@ -31,6 +31,7 @@ import {
   batchGetPublicKeysAsync,
   decrypt,
   encrypt,
+  encryptAsync,
   mnemonicFromEntropyAsync,
   mnemonicToSeedAsync,
   secp256k1,
@@ -441,7 +442,7 @@ export default class CoreChainSoftwareBtc extends CoreChainApiBase {
     privateKeys: ICoreApiPrivateKeysMap;
     password: string;
     relPaths?: string[];
-  }): ICoreApiPrivateKeysMap {
+  }): Promise<ICoreApiPrivateKeysMap> {
     const deriver = new BaseBip32KeyDeriver(
       Buffer.from('Bitcoin seed'),
       secp256k1,
@@ -479,7 +480,7 @@ export default class CoreChainSoftwareBtc extends CoreChainApiBase {
 
       // TODO use dbAccountAddresses save fullPath/relPath key
       privateKeys[relPath] = bufferUtils.bytesToHex(
-        await encryptAsync({ password, data: cache[relPath].key }),
+        await encryptAsync({ password, data: cache[relPath].key })
       );
     });
     return privateKeys;
