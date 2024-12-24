@@ -142,6 +142,7 @@ export type IEncryptStringParams = {
   password: string;
   data: string;
   dataEncoding?: BufferEncoding;
+  allowRawPassword?: boolean;
 };
 
 async function encryptStringAsync({
@@ -211,7 +212,7 @@ function decrypt(
   if (!password) {
     throw new IncorrectPassword();
   }
-  const dataBuffer = bufferUtils.toBuffer(data);
+  const dataBuffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
 
   if (!ignoreLogger) {
     defaultLogger.account.secretPerf.decodePassword();
@@ -222,6 +223,9 @@ function decrypt(
     ignoreLogger: true,
     allowRawPassword,
   });
+  if (!passwordDecoded) {
+    throw new IncorrectPassword();
+  }
   if (!ignoreLogger) {
     defaultLogger.account.secretPerf.decodePasswordDone();
   }
@@ -301,6 +305,7 @@ export type IDecryptStringParams = {
   data: string;
   resultEncoding?: BufferEncoding;
   dataEncoding?: BufferEncoding;
+  allowRawPassword?: boolean;
 };
 function decryptString({
   password,
