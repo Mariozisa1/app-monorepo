@@ -185,10 +185,10 @@ class ServiceCloudBackup extends ServiceBase {
 
     return {
       privateData: password
-        ? encrypt(
+        ? (await encrypt(
             password,
             Buffer.from(JSON.stringify(privateBackupData), 'utf8'),
-          ).toString('base64')
+          )).toString('base64')
         : '',
       publicData: publicBackupData,
       appVersion: version ?? '',
@@ -369,14 +369,14 @@ class ServiceCloudBackup extends ServiceBase {
     privateData: IPrivateBackupData;
     remotePassword: string;
   }) {
-    Object.keys(privateData.credentials).forEach((key) => {
+    await Promise.all(Object.keys(privateData.credentials).map(async (key) => {
       const credential = privateData.credentials[key];
       try {
         const credentialRs = JSON.parse(credential) as {
           entropy: string;
           seed: string;
         };
-        privateData.credentials[key] = encryptRevealableSeed({
+        privateData.credentials[key] = await encryptRevealableSeed({
           rs: {
             entropyWithLangPrefixed: credentialRs.entropy,
             seed: credentialRs.seed,
@@ -386,7 +386,7 @@ class ServiceCloudBackup extends ServiceBase {
       } catch {
         //
       }
-    });
+    }));
     return privateData;
   }
 

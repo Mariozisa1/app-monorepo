@@ -136,12 +136,26 @@ export type IEncryptStringParams = {
   data: string;
   dataEncoding?: BufferEncoding;
 };
+/**
+ * @deprecated Use encryptStringAsync instead. This synchronous encryption method will be removed in a future version.
+ * @see encryptStringAsync
+ */
 function encryptString({
   password,
   data,
   dataEncoding = 'hex',
 }: IEncryptStringParams): string {
   const bytes = encrypt(password, bufferUtils.toBuffer(data, dataEncoding));
+  return bufferUtils.bytesToHex(bytes);
+}
+
+async function encryptStringAsync({
+  password,
+  data,
+  dataEncoding = 'hex',
+}: IEncryptStringParams): Promise<string> {
+  const bufferData = bufferUtils.toBuffer(data, dataEncoding);
+  const bytes = await encryptAsync({ password, data: bufferData });
   return bufferUtils.bytesToHex(bytes);
 }
 
@@ -405,6 +419,7 @@ export {
   encrypt,
   encryptAsync,
   encryptString,
+  encryptStringAsync,
   ensureSensitiveTextEncoded,
   getBgSensitiveTextEncodeKey,
   isEncodedSensitiveText,

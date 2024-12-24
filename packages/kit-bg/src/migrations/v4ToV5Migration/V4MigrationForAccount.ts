@@ -111,7 +111,7 @@ export class V4MigrationForAccount extends V4MigrationManagerBase {
         );
       }
       const credentials: ICoreCredentialsInfo = {
-        imported: encryptImportedCredential({
+        imported: await encryptImportedCredential({
           credential: {
             privateKey,
           },

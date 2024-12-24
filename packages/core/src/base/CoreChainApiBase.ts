@@ -20,7 +20,8 @@ import {
   decrypt,
   decryptImportedCredential,
   ed25519,
-  encrypt,
+  encrypt, // @deprecated Use encryptAsync instead
+  encryptAsync,
   nistp256,
   secp256k1,
 } from '../secret';
@@ -109,6 +110,10 @@ export abstract class CoreChainApiBase {
     });
   }
 
+  /**
+   * @deprecated The synchronous encryption methods used in this function will be deprecated.
+   * Please use async encryption methods instead.
+   */
   protected async baseGetPrivateKeys({
     payload,
     curve,
@@ -140,7 +145,9 @@ export abstract class CoreChainApiBase {
         password,
         credential: credentials.imported,
       });
-      const encryptPrivateKey = bufferUtils.bytesToHex(encrypt(password, p));
+      const encryptPrivateKey = bufferUtils.bytesToHex(
+        await encryptAsync({ password, data: p })
+      );
       privateKeys[account.path] = encryptPrivateKey;
       privateKeys[''] = encryptPrivateKey;
     }
@@ -150,6 +157,10 @@ export abstract class CoreChainApiBase {
     return privateKeys;
   }
 
+  /**
+   * @deprecated The synchronous encryption methods used in this function will be deprecated.
+   * Please use async encryption methods instead.
+   */
   protected async baseGetPrivateKeysHd({
     curve,
     password,
@@ -170,14 +181,14 @@ export abstract class CoreChainApiBase {
       );
     }
 
-    const keys = batchGetPrivateKeys(
+    const keys = await batchGetPrivateKeys(
       curve,
       hdCredential,
       password,
       basePath,
       usedRelativePaths,
     );
-    const map: ICoreApiPrivateKeysMap = keys.reduce((ret, key) => {
+    const map: ICoreApiPrivateKeysMap = keys.reduce((ret: ICoreApiPrivateKeysMap, key: ISecretPrivateKeyInfo) => {
       const result: ICoreApiPrivateKeysMap = {
         ...ret,
         [key.path]: bufferUtils.bytesToHex(key.extendedKey.key),
@@ -187,6 +198,10 @@ export abstract class CoreChainApiBase {
     return map;
   }
 
+  /**
+   * @deprecated The synchronous encryption methods used in this function will be deprecated.
+   * Please use async encryption methods instead.
+   */
   protected async baseGetAddressesFromHd(
     query: ICoreApiGetAddressesQueryHd,
     options: {
@@ -205,7 +220,7 @@ export abstract class CoreChainApiBase {
     let pvtkeyInfos: ISecretPrivateKeyInfo[] = [];
 
     if (isPrivateKeyMode) {
-      pvtkeyInfos = batchGetPrivateKeys(
+      pvtkeyInfos = await batchGetPrivateKeys(
         curve,
         hdCredential,
         password,
@@ -235,7 +250,7 @@ export abstract class CoreChainApiBase {
         let result: ICoreApiGetAddressItem | undefined;
 
         if (isPrivateKeyMode) {
-          const privateKeyRaw = bufferUtils.bytesToHex(decrypt(password, key));
+          const privateKeyRaw = bufferUtils.bytesToHex(await decrypt(password, key));
           result = await this.getAddressFromPrivate({
             networkInfo: query.networkInfo,
             privateKeyRaw,

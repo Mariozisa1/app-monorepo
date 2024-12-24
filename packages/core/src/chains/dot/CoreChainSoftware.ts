@@ -14,6 +14,7 @@ import {
   decrypt,
   decryptImportedCredential,
   encrypt,
+  encryptAsync,
   mnemonicFromEntropy,
 } from '../../secret';
 import {
@@ -78,7 +79,7 @@ export default class CoreChainSoftware extends CoreChainApiBase {
       throw new Error('privateKeyRaw is required');
     }
     if (keyType === ECoreApiExportedSecretKeyType.privateKey) {
-      return `0x${decrypt(password, privateKeyRaw).toString('hex')}`;
+      return `0x${(await decrypt(password, privateKeyRaw)).toString('hex')}`;
     }
     throw new Error(`SecretKey type not support: ${keyType}`);
   }
@@ -90,39 +91,59 @@ export default class CoreChainSoftware extends CoreChainApiBase {
   }): Promise<ICoreApiPrivateKeysMap> {
     const { credentials, account, password, relPaths } = payload;
     let privateKeys: ICoreApiPrivateKeysMap = {};
-    if (credentials.hd) {
-      const pathComponents = account.path.split('/');
-      const usedRelativePaths = relPaths || [pathComponents.pop() as string];
-      const basePath = pathComponents.join('/');
-      const mnemonic = mnemonicFromEntropy(credentials.hd, password);
-      const keys = usedRelativePaths.map((relPath) => {
-        const path = `${basePath}/${relPath}`;
+    try {
+      if (credentials.hd) {
+        const pathComponents = account.path.split('/');
+        const usedRelativePaths = relPaths || [pathComponents.pop() as string];
+        const basePath = pathComponents.join('/');
+        const mnemonic = mnemonicFromEntropy(credentials.hd, password);
+        const keys = await Promise.all(usedRelativePaths.map(async (relPath) => {
+          const path = `${basePath}/${relPath}`;
+          try {
+            const keyPair = derivationHdLedger(mnemonic, path);
+            const encryptedKey = await encryptAsync({ 
+              password, 
+              data: Buffer.from(keyPair.secretKey.slice(0, 32)) 
+            });
+            return {
+              path,
+              key: encryptedKey,
+            };
+          } catch (error) {
+            console.error(`Failed to process key for path ${path}:`, error);
+            throw error;
+          }
+        }));
 
-        const keyPair = derivationHdLedger(mnemonic, path);
-        return {
-          path,
-          key: encrypt(password, Buffer.from(keyPair.secretKey.slice(0, 32))),
-        };
-      });
-
-      privateKeys = keys.reduce(
+        privateKeys = keys.reduce(
         (ret, key) => ({ ...ret, [key.path]: bufferUtils.bytesToHex(key.key) }),
         {},
       );
     }
     if (credentials.imported) {
-      const { privateKey: p } = decryptImportedCredential({
-        password,
-        credential: credentials.imported,
-      });
-      const encryptPrivateKey = bufferUtils.bytesToHex(encrypt(password, p));
-      privateKeys[account.path] = encryptPrivateKey;
-      privateKeys[''] = encryptPrivateKey;
+      try {
+        const { privateKey: p } = decryptImportedCredential({
+          password,
+          credential: credentials.imported,
+        });
+        const encryptPrivateKey = bufferUtils.bytesToHex(
+          await encryptAsync({ password, data: p })
+        );
+        privateKeys[account.path] = encryptPrivateKey;
+        privateKeys[''] = encryptPrivateKey;
+      } catch (error) {
+        console.error('Failed to process imported credentials:', error);
+        throw error;
+      }
     }
     if (!Object.keys(privateKeys).length) {
       throw new Error('No private keys found');
     }
     return privateKeys;
+    } catch (error) {
+      console.error('Error in baseGetPrivateKeys:', error);
+      throw error;
+    }
   }
 
   override async getPrivateKeys(
