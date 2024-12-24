@@ -110,6 +110,47 @@ function encodePassword({
   });
 }
 
+async function encryptAsync({
+  password,
+  data,
+}: {
+  password: string;
+  data: Buffer | string;
+}): Promise<Buffer> {
+  // eslint-disable-next-line no-param-reassign
+  const passwordDecoded = decodePassword({ password });
+
+  if (platformEnv.isNative && !platformEnv.isJest) {
+    throw new Error('webembedApiProxy not ready yet');
+  }
+
+  const dataBuffer = bufferUtils.toBuffer(data);
+  const salt: Buffer = crypto.randomBytes(PBKDF2_SALT_LENGTH);
+  const key: Buffer = keyFromPasswordAndSalt(passwordDecoded, salt);
+  const iv: Buffer = crypto.randomBytes(AES256_IV_LENGTH);
+  return Buffer.concat([
+    salt,
+    iv,
+    Buffer.from(AES_CBC.encrypt(dataBuffer, key, true, iv)),
+  ]);
+}
+
+export type IEncryptStringParams = {
+  password: string;
+  data: string;
+  dataEncoding?: BufferEncoding;
+};
+
+async function encryptStringAsync({
+  password,
+  data,
+  dataEncoding = 'hex',
+}: IEncryptStringParams): Promise<string> {
+  const bufferData = bufferUtils.toBuffer(data, dataEncoding);
+  const bytes = await encryptAsync({ password, data: bufferData });
+  return bufferUtils.bytesToHex(bytes);
+}
+
 /**
  * @deprecated Use encryptAsync instead. This synchronous encryption method will be removed in a future version.
  * @see encryptAsync
@@ -138,15 +179,6 @@ function encrypt(
   ]);
 }
 
-export type IEncryptStringParams = {
-  password: string;
-  data: string;
-  dataEncoding?: BufferEncoding;
-};
-/**
- * @deprecated Use encryptStringAsync instead. This synchronous encryption method will be removed in a future version.
- * @see encryptStringAsync
- */
 /**
  * @deprecated Use encryptStringAsync instead. This synchronous encryption method will be removed in a future version.
  * @see encryptStringAsync
@@ -162,26 +194,6 @@ function encryptString({
   const bytes = encrypt(password, bufferUtils.toBuffer(data, dataEncoding));
   return bufferUtils.bytesToHex(bytes);
 }
-
-async function encryptStringAsync({
-  password,
-  data,
-  dataEncoding = 'hex',
-}: IEncryptStringParams): Promise<string> {
-  const bufferData = bufferUtils.toBuffer(data, dataEncoding);
-  const bytes = await encryptAsync({ password, data: bufferData });
-  return bufferUtils.bytesToHex(bytes);
-}
-
-async function encryptAsync({
-  password,
-  data,
-}: {
-  password: string;
-  data: Buffer | string;
-}): Promise<Buffer> {
-  // eslint-disable-next-line no-param-reassign
-  const passwordDecoded = decodePassword({ password });
 
   if (platformEnv.isNative && !platformEnv.isJest) {
     throw new Error('webembedApiProxy not ready yet');

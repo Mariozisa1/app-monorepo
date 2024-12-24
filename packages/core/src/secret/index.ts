@@ -13,27 +13,15 @@ import {
 import { ed25519, nistp256, secp256k1 } from './curves';
 import {
   decrypt,
-  encrypt as deprecatedEncrypt,
+  encrypt,
   encryptAsync,
-  encryptString as deprecatedEncryptString,
+  encryptString,
   encryptStringAsync,
   ensureSensitiveTextEncoded,
 } from './encryptors/aes256';
-
-/**
- * @deprecated Use encryptAsync instead
- * This synchronous function will be removed in a future version.
- * Please migrate to the async version for better security and performance.
- */
-export const encrypt = deprecatedEncrypt;
-
-/**
- * @deprecated Use encryptStringAsync instead
- * This synchronous function will be removed in a future version.
- * Please migrate to the async version for better security and performance.
- */
-export const encryptString = deprecatedEncryptString;
 import { hash160 } from './hash';
+
+export * from './encryptors/aes256';
 import ecc from './nobleSecp256k1Wrapper';
 import {
   tonMnemonicToRevealableSeed,
