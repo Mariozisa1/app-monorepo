@@ -172,6 +172,9 @@ function encrypt(
   const dataBuffer = bufferUtils.toBuffer(data);
   // eslint-disable-next-line no-param-reassign
   const passwordDecoded = decodePassword({ password, allowRawPassword });
+  if (!passwordDecoded) {
+    throw new IncorrectPassword();
+  }
   const salt: Buffer = crypto.randomBytes(PBKDF2_SALT_LENGTH);
   const key: Buffer = keyFromPasswordAndSalt(passwordDecoded, salt);
   const iv: Buffer = crypto.randomBytes(AES256_IV_LENGTH);

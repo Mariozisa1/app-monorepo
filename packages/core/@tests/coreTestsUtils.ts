@@ -7,6 +7,13 @@ import {
   mnemonicToRevealableSeed,
 } from '../src/secret';
 
+function checkIsDefined<T>(value: T | undefined | null): T {
+  if (value === undefined || value === null) {
+    throw new Error('Expected value to be defined');
+  }
+  return value;
+}
+
 import type {
   ICoreTestsAccountInfo,
   ICoreTestsHdCredential,

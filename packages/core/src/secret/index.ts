@@ -231,7 +231,7 @@ function decryptImportedCredential({
   password: string;
 }): ICoreImportedCredential {
   const text = bufferUtils.bytesToUtf8(
-    decrypt(password, credential.replace(EncryptPrefixImportedCredential, '')),
+    decrypt(password, typeof credential === 'string' ? credential.replace(EncryptPrefixImportedCredential, '') : credential),
   );
   return JSON.parse(text) as ICoreImportedCredential;
 }
