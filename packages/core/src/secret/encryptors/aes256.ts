@@ -119,7 +119,9 @@ function encrypt(
   data: Buffer | string,
   allowRawPassword?: boolean,
 ): Buffer {
-  console.warn('encrypt() is deprecated. Please use encryptAsync() instead.');
+  console.warn('encrypt() is deprecated. Please use encryptAsync() instead');
+  // eslint-disable-next-line no-console
+  console.trace('encrypt() call stack');
   if (!password) {
     throw new IncorrectPassword();
   }
@@ -154,7 +156,9 @@ function encryptString({
   data,
   dataEncoding = 'hex',
 }: IEncryptStringParams): string {
-  console.warn('encryptString() is deprecated. Please use encryptStringAsync() instead.');
+  console.warn('encryptString() is deprecated. Please use encryptStringAsync() instead');
+  // eslint-disable-next-line no-console
+  console.trace('encryptString() call stack');
   const bytes = encrypt(password, bufferUtils.toBuffer(data, dataEncoding));
   return bufferUtils.bytesToHex(bytes);
 }

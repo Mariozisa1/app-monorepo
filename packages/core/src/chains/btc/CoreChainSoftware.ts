@@ -458,31 +458,33 @@ export default class CoreChainSoftwareBtc extends CoreChainApiBase {
 
     const cache: Record<string, IBip32ExtendedKey> = {};
 
-    relPaths?.forEach((relPath) => {
-      const pathComponents = relPath.split('/');
+    await Promise.all(
+      relPaths?.map(async (relPath) => {
+        const pathComponents = relPath.split('/');
 
-      let currentPath = '';
-      let parent = startKey;
-      pathComponents.forEach((pathComponent) => {
-        currentPath =
-          currentPath.length > 0
-            ? `${currentPath}/${pathComponent}`
-            : pathComponent;
-        if (typeof cache[currentPath] === 'undefined') {
-          const index = pathComponent.endsWith("'")
-            ? parseInt(pathComponent.slice(0, -1), 10) + 2 ** 31
-            : parseInt(pathComponent, 10);
-          const thisPrivKey = deriver.CKDPriv(parent, index);
-          cache[currentPath] = thisPrivKey;
-        }
-        parent = cache[currentPath];
-      });
+        let currentPath = '';
+        let parent = startKey;
+        pathComponents.forEach((pathComponent) => {
+          currentPath =
+            currentPath.length > 0
+              ? `${currentPath}/${pathComponent}`
+              : pathComponent;
+          if (typeof cache[currentPath] === 'undefined') {
+            const index = pathComponent.endsWith("'")
+              ? parseInt(pathComponent.slice(0, -1), 10) + 2 ** 31
+              : parseInt(pathComponent, 10);
+            const thisPrivKey = deriver.CKDPriv(parent, index);
+            cache[currentPath] = thisPrivKey;
+          }
+          parent = cache[currentPath];
+        });
 
-      // TODO use dbAccountAddresses save fullPath/relPath key
-      privateKeys[relPath] = bufferUtils.bytesToHex(
-        await encryptAsync({ password, data: cache[relPath].key })
-      );
-    });
+        // TODO use dbAccountAddresses save fullPath/relPath key
+        privateKeys[relPath] = bufferUtils.bytesToHex(
+          await encryptAsync({ password, data: cache[relPath].key })
+        );
+      }) || [],
+    );
     return privateKeys;
   }
 
