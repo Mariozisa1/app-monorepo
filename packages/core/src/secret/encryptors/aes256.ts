@@ -117,14 +117,17 @@ async function encryptAsync({
   password: string;
   data: Buffer | string;
 }): Promise<Buffer> {
-  // eslint-disable-next-line no-param-reassign
+  if (!password) {
+    throw new IncorrectPassword();
+  }
+
   const passwordDecoded = decodePassword({ password });
+  const dataBuffer = bufferUtils.toBuffer(data);
 
   if (platformEnv.isNative && !platformEnv.isJest) {
     throw new Error('webembedApiProxy not ready yet');
   }
 
-  const dataBuffer = bufferUtils.toBuffer(data);
   const salt: Buffer = crypto.randomBytes(PBKDF2_SALT_LENGTH);
   const key: Buffer = keyFromPasswordAndSalt(passwordDecoded, salt);
   const iv: Buffer = crypto.randomBytes(AES256_IV_LENGTH);
@@ -144,11 +147,11 @@ export type IEncryptStringParams = {
 async function encryptStringAsync({
   password,
   data,
-  dataEncoding = 'hex',
+  dataEncoding = 'utf8',
 }: IEncryptStringParams): Promise<string> {
   const bufferData = bufferUtils.toBuffer(data, dataEncoding);
   const bytes = await encryptAsync({ password, data: bufferData });
-  return bufferUtils.bytesToHex(bytes);
+  return bufferUtils.bytesToUtf8(bytes);
 }
 
 /**
@@ -186,28 +189,13 @@ function encrypt(
 function encryptString({
   password,
   data,
-  dataEncoding = 'hex',
+  dataEncoding = 'utf8',
 }: IEncryptStringParams): string {
   console.warn('encryptString() is deprecated. Please use encryptStringAsync() instead');
   // eslint-disable-next-line no-console
   console.trace('encryptString() call stack');
   const bytes = encrypt(password, bufferUtils.toBuffer(data, dataEncoding));
-  return bufferUtils.bytesToHex(bytes);
-}
-
-  if (platformEnv.isNative && !platformEnv.isJest) {
-    throw new Error('webembedApiProxy not ready yet');
-    // const webembedApiProxy = (
-    //   await import('@onekeyhq/kit-bg/src/webembeds/instance/webembedApiProxy')
-    // ).default;
-    // const str = await webembedApiProxy.secret.encrypt({
-    //   password,
-    //   data: bufferUtils.bytesToHex(data),
-    // });
-    // return bufferUtils.toBuffer(str, 'hex');
-  }
-
-  return Promise.resolve(encrypt(passwordDecoded, data));
+  return bufferUtils.bytesToUtf8(bytes);
 }
 
 function decrypt(

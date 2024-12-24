@@ -20,8 +20,6 @@ import {
   ensureSensitiveTextEncoded,
 } from './encryptors/aes256';
 import { hash160 } from './hash';
-
-export * from './encryptors/aes256';
 import ecc from './nobleSecp256k1Wrapper';
 import {
   tonMnemonicToRevealableSeed,
@@ -44,6 +42,8 @@ import type {
   ICoreImportedCredentialEncryptHex,
   ICurveName,
 } from '../types';
+
+export * from './encryptors/aes256';
 
 export * from './bip32';
 export * from './bip340';
@@ -185,11 +185,14 @@ async function encryptVerifyString({
   password: string;
   addPrefixString?: boolean;
 }): Promise<string> {
-  const encrypted = await encryptAsync({ 
-    password, 
-    data: Buffer.from(DEFAULT_VERIFY_STRING) 
+  const encrypted = await encryptAsync({
+    password,
+    data: Buffer.from(DEFAULT_VERIFY_STRING),
   });
-  return (addPrefixString ? EncryptPrefixVerifyString : '') + encrypted.toString('hex');
+  return (
+    (addPrefixString ? EncryptPrefixVerifyString : '') +
+    encrypted.toString('hex')
+  );
 }
 
 function decryptRevealableSeed({
@@ -255,11 +258,13 @@ async function batchGetKeys(
   prefix: string,
   relPaths: Array<string>,
   type: 'public' | 'private',
-): Promise<Array<{
-  path: string;
-  parentFingerPrint: Buffer;
-  extendedKey: IBip32ExtendedKey;
-}>> {
+): Promise<
+  Array<{
+    path: string;
+    parentFingerPrint: Buffer;
+    extendedKey: IBip32ExtendedKey;
+  }>
+> {
   const ret: Array<{
     path: string;
     parentFingerPrint: Buffer;
@@ -304,7 +309,7 @@ async function batchGetKeys(
 
     let currentPath = prefix;
     let parent = cache[currentPath];
-    
+
     for (const pathComponent of pathComponents) {
       currentPath = `${currentPath}/${pathComponent}`;
       if (typeof cache[currentPath] === 'undefined') {
@@ -329,12 +334,16 @@ async function batchGetKeys(
       parent = cache[currentPath];
     }
 
-    const extendedKey = type === 'private'
-      ? {
-          chainCode: cache[currentPath].privkey.chainCode,
-          key: await encryptAsync({ password, data: cache[currentPath].privkey.key }),
-        }
-      : deriver.N(cache[currentPath].privkey);
+    const extendedKey =
+      type === 'private'
+        ? {
+            chainCode: cache[currentPath].privkey.chainCode,
+            key: await encryptAsync({
+              password,
+              data: cache[currentPath].privkey.key,
+            }),
+          }
+        : deriver.N(cache[currentPath].privkey);
 
     ret.push({
       path: currentPath,
@@ -358,7 +367,7 @@ async function batchGetPrivateKeys(
   prefix: string,
   relPaths: Array<string>,
 ): Promise<ISecretPrivateKeyInfo[]> {
-  return await batchGetKeys(
+  return batchGetKeys(
     curveName,
     hdCredential,
     password,
@@ -385,7 +394,7 @@ async function batchGetPublicKeys(
   prefix: string,
   relPaths: Array<string>,
 ): Promise<ISecretPublicKeyInfo[]> {
-  return await batchGetKeys(
+  return batchGetKeys(
     curveName,
     hdCredential,
     password,
@@ -418,7 +427,13 @@ async function batchGetPublicKeysAsync(
     }));
   }
   const { curveName, hdCredential, password, prefix, relPaths } = params;
-  return batchGetPublicKeys(curveName, hdCredential, password, prefix, relPaths);
+  return batchGetPublicKeys(
+    curveName,
+    hdCredential,
+    password,
+    prefix,
+    relPaths,
+  );
 }
 
 async function generateMasterKeyFromSeed(
@@ -434,9 +449,9 @@ async function generateMasterKeyFromSeed(
   const seedBuffer: Buffer = bufferUtils.toBuffer(seed);
   const masterKey: IBip32ExtendedKey =
     deriver.generateMasterKeyFromSeed(seedBuffer);
-  const encryptedKey = await encryptAsync({ 
-    password, 
-    data: masterKey.key 
+  const encryptedKey = await encryptAsync({
+    password,
+    data: masterKey.key,
   });
   return {
     key: encryptedKey,
@@ -472,9 +487,9 @@ async function CKDPriv(
     chainCode: encryptedParent.chainCode,
   };
   const child: IBip32ExtendedKey = deriver.CKDPriv(parent, index);
-  const encryptedKey = await encryptAsync({ 
-    password, 
-    data: child.key 
+  const encryptedKey = await encryptAsync({
+    password,
+    data: child.key,
   });
   return {
     key: encryptedKey,
@@ -499,7 +514,7 @@ async function revealableSeedFromMnemonic(
     mnemonic,
     passphrase,
   );
-  return await encryptRevealableSeed({
+  return encryptRevealableSeed({
     rs,
     password,
   });
@@ -586,7 +601,7 @@ async function revealableSeedFromTonMnemonic(
   password: string,
 ): Promise<IBip39RevealableSeedEncryptHex> {
   const rs: IBip39RevealableSeed = tonMnemonicToRevealableSeed(mnemonic);
-  return await encryptRevealableSeed({
+  return encryptRevealableSeed({
     rs,
     password,
   });
