@@ -10,7 +10,7 @@ import { LocalDbAgentBase } from '../LocalDbAgentBase';
 
 import { realmDBSchemasMap } from './schemas';
 
-import type { RealmObjectBase } from './base/RealmObjectBase';
+import type Realm from 'realm';
 import type { ELocalDBStoreNames } from '../localDBStoreNames';
 import type {
   ILocalDBAgent,
@@ -35,7 +35,7 @@ import type {
   ILocalDBWithTransactionTask,
   IRealmDBSchemaMap,
 } from '../types';
-import type Realm from 'realm';
+import type { RealmObjectBase } from './base/RealmObjectBase';
 
 export class RealmDBAgent extends LocalDbAgentBase implements ILocalDBAgent {
   constructor(realm: Realm) {
@@ -229,8 +229,13 @@ export class RealmDBAgent extends LocalDbAgentBase implements ILocalDBAgent {
 
     const pairs = await this.buildRecordPairsFromIds(params);
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await Promise.all(pairs.map(async (oldRecord) => updater(oldRecord[1]!)));
+    await Promise.all(
+      pairs.map(async (oldRecord) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const newRecord = await updater(oldRecord[1]!);
+        return newRecord;
+      }),
+    );
     return Promise.resolve(undefined);
   }
 
