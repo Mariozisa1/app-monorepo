@@ -9,7 +9,7 @@ import {
   decrypt,
   decryptString,
   encodeSensitiveText,
-  encryptString,
+  encryptStringAsync,
   ensureSensitiveTextEncoded,
   getBgSensitiveTextEncodeKey,
   revealEntropyToMnemonic,
@@ -108,7 +108,7 @@ export default class ServicePassword extends ServiceBase {
 
   @backgroundMethod()
   async encryptString(params: IEncryptStringParams) {
-    return encryptString(params);
+    return encryptStringAsync(params);
   }
 
   @backgroundMethod()
@@ -119,7 +119,7 @@ export default class ServicePassword extends ServiceBase {
   @backgroundMethod()
   async encryptByInstanceId(input: string): Promise<string> {
     const instanceId = await this.backgroundApi.serviceSetting.getInstanceId();
-    const output = encodeSensitiveText({
+    const output = await encodeSensitiveText({
       text: input,
       key: instanceId,
     });

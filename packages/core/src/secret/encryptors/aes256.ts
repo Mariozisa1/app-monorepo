@@ -96,13 +96,13 @@ function decodePassword({
   return password;
 }
 
-function encodePassword({
+async function encodePassword({
   password,
   key,
 }: {
   password: string;
   key?: string;
-}): string {
+}): Promise<string> {
   // eslint-disable-next-line @typescript-eslint/no-use-before-define
   return encodeSensitiveText({
     text: password,
@@ -403,7 +403,13 @@ function decodeSensitiveText({
   throw new Error('Not correct encoded text');
 }
 
-function encodeSensitiveText({ text, key }: { text: string; key?: string }) {
+async function encodeSensitiveText({
+  text,
+  key,
+}: {
+  text: string;
+  key?: string;
+}) {
   checkKeyPassedOnExtUi(key);
   const theKey = key || encodeKey;
   ensureEncodeKeyExists(theKey);
@@ -422,9 +428,16 @@ function encodeSensitiveText({ text, key }: { text: string; key?: string }) {
 
   // *** aes encode
   if (SENSITIVE_ENCODE_TYPE === 'aes') {
-    const encoded = encrypt(theKey, Buffer.from(text, 'utf-8'), true).toString(
-      'hex',
-    );
+    // const encoded = encrypt(theKey, Buffer.from(text, 'utf-8'), true).toString(
+    //   'hex',
+    // );
+    const encoded = (
+      await encryptAsync({
+        password: theKey,
+        data: Buffer.from(text, 'utf-8'),
+        allowRawPassword: true,
+      })
+    ).toString('hex');
     return `${ENCODE_TEXT_PREFIX.aes}${encoded}`;
   }
 

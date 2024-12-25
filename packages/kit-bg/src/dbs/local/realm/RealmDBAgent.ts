@@ -10,7 +10,7 @@ import { LocalDbAgentBase } from '../LocalDbAgentBase';
 
 import { realmDBSchemasMap } from './schemas';
 
-import type Realm from 'realm';
+import type { RealmObjectBase } from './base/RealmObjectBase';
 import type { ELocalDBStoreNames } from '../localDBStoreNames';
 import type {
   ILocalDBAgent,
@@ -35,7 +35,7 @@ import type {
   ILocalDBWithTransactionTask,
   IRealmDBSchemaMap,
 } from '../types';
-import type { RealmObjectBase } from './base/RealmObjectBase';
+import type Realm from 'realm';
 
 export class RealmDBAgent extends LocalDbAgentBase implements ILocalDBAgent {
   constructor(realm: Realm) {
