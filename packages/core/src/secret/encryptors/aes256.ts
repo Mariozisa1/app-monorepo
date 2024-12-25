@@ -193,6 +193,8 @@ async function encryptAsync({
   const dataBuffer = bufferUtils.toBuffer(data);
 
   if (platformEnv.isNative && !platformEnv.isJest) {
+    // call appGlobals.$webembedApiProxy.secret.encryptAsync()
+
     throw new Error('webembedApiProxy not ready yet');
     // const webembedApiProxy = (
     //   await import('@onekeyhq/kit-bg/src/webembeds/instance/webembedApiProxy')
@@ -298,6 +300,8 @@ async function decryptAsync({
   const passwordDecoded = decodePassword({ password });
 
   if (platformEnv.isNative && !platformEnv.isJest) {
+    // call appGlobals.$webembedApiProxy.secret.decryptAsync()
+
     throw new Error('webembedApiProxy not ready yet');
     // const webembedApiProxy = (
     //   await import('@onekeyhq/kit-bg/src/webembeds/instance/webembedApiProxy')
