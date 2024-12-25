@@ -545,7 +545,7 @@ export type IMnemonicFromEntropyAsyncParams = {
   hdCredential: IBip39RevealableSeedEncryptHex;
   password: string;
 };
-export function mnemonicFromEntropyAsync(
+async function mnemonicFromEntropyAsync(
   params: IMnemonicFromEntropyAsyncParams,
 ): Promise<string> {
   if (platformEnv.isNative) {
@@ -560,7 +560,7 @@ export type IMnemonicToSeedAsyncParams = {
   mnemonic: string;
   passphrase?: string;
 };
-export async function mnemonicToSeedAsync(
+async function mnemonicToSeedAsync(
   params: IMnemonicToSeedAsyncParams,
 ): Promise<Buffer> {
   if (platformEnv.isNative) {
@@ -579,7 +579,7 @@ export type IGenerateRootFingerprintHexAsyncParams = {
   hdCredential: IBip39RevealableSeedEncryptHex;
   password: string;
 };
-export async function generateRootFingerprintHexAsync(
+async function generateRootFingerprintHexAsync(
   params: IGenerateRootFingerprintHexAsyncParams,
 ): Promise<string> {
   if (platformEnv.isNative) {
@@ -648,6 +648,9 @@ export {
   publicFromPrivate,
   revealableSeedFromMnemonic,
   revealableSeedFromTonMnemonic,
+  mnemonicFromEntropyAsync,
+  mnemonicToSeedAsync,
+  generateRootFingerprintHexAsync,
   tonMnemonicFromEntropy,
   sign,
   uncompressPublicKey,
