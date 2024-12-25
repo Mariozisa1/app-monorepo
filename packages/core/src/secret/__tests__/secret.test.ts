@@ -27,6 +27,11 @@ import {
   fixV4VerifyStringToV5,
   generateMasterKeyFromSeed,
   N,
+  sign,
+  verify,
+  uncompressPublicKey,
+  revealableSeedFromTonMnemonic,
+  tonMnemonicFromEntropy,
 } from '../index';
 import type { IBip32ExtendedKey } from '../bip32';
 
@@ -1157,7 +1162,7 @@ describe('Secret Module Tests', () => {
     };
 
     it('should derive public key from private key', () => {
-      const publicKey = N('secp256k1', masterKey);
+      const publicKey = N('secp256k1', masterKey, testPassword);
       expect(publicKey).toBeDefined();
       expect(publicKey.key).toBeInstanceOf(Buffer);
       expect(publicKey.chainCode).toEqual(masterKey.chainCode);
@@ -1166,7 +1171,7 @@ describe('Secret Module Tests', () => {
     it('should work with different curves', () => {
       const curves: ICurveName[] = ['secp256k1', 'nistp256', 'ed25519'];
       curves.forEach(curve => {
-        const publicKey = N(curve, masterKey);
+        const publicKey = N(curve, masterKey, testPassword);
         expect(publicKey).toBeDefined();
         expect(publicKey.key).toBeInstanceOf(Buffer);
         expect(publicKey.chainCode).toEqual(masterKey.chainCode);
@@ -1174,12 +1179,268 @@ describe('Secret Module Tests', () => {
     });
 
     it('should throw error for invalid curve', () => {
-      expect(() => N('invalid-curve' as ICurveName, masterKey)).toThrow();
+      expect(() => N('invalid-curve' as ICurveName, masterKey, testPassword)).toThrow();
+    });
+
+    it('should throw error for invalid password', () => {
+      expect(() => N('secp256k1', masterKey, 'wrong-password')).toThrow();
     });
 
     it('should match snapshot', () => {
-      const publicKey = N('secp256k1', masterKey);
+      const publicKey = N('secp256k1', masterKey, testPassword);
       expect(publicKey).toMatchSnapshot();
+    });
+  });
+
+  describe('publicFromPrivate', () => {
+    const testPassword = 'test123';
+    const privateKey = encrypt(testPassword, Buffer.from('0123456789abcdef0123456789abcdef', 'hex'));
+
+    it('should generate public key from private key for secp256k1', () => {
+      const publicKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      expect(publicKey).toBeInstanceOf(Buffer);
+      expect(publicKey.length).toBeGreaterThan(0);
+    });
+
+    it('should generate public key from private key for nistp256', () => {
+      const publicKey = publicFromPrivate('nistp256', privateKey, testPassword);
+      expect(publicKey).toBeInstanceOf(Buffer);
+      expect(publicKey.length).toBeGreaterThan(0);
+    });
+
+    it('should generate public key from private key for ed25519', () => {
+      const publicKey = publicFromPrivate('ed25519', privateKey, testPassword);
+      expect(publicKey).toBeInstanceOf(Buffer);
+      expect(publicKey.length).toBeGreaterThan(0);
+    });
+
+    it('should throw error for invalid curve', () => {
+      expect(() => publicFromPrivate('invalid-curve' as ICurveName, privateKey, testPassword)).toThrow();
+    });
+
+    it('should throw error for invalid password', () => {
+      expect(() => publicFromPrivate('secp256k1', privateKey, 'wrong-password')).toThrow();
+    });
+
+
+    it('should match snapshot', () => {
+      const publicKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      expect(publicKey).toMatchSnapshot();
+    });
+  });
+
+  describe('revealableSeedFromMnemonic', () => {
+    const testMnemonic = 'test test test test test test test test test test test junk';
+    const testPassword = 'test123';
+
+    it('should generate revealable seed from mnemonic', () => {
+      const rs = revealableSeedFromMnemonic(testMnemonic, testPassword);
+      expect(rs).toBeDefined();
+      expect(rs.startsWith('|RP|')).toBe(true); // Check for HD credential prefix
+      
+      // Decrypt and verify the content
+      const decrypted = decryptRevealableSeed({
+        rs,
+        password: testPassword,
+      });
+      expect(typeof decrypted.entropyWithLangPrefixed).toBe('string');
+      expect(typeof decrypted.seed).toBe('string');
+    });
+
+    it('should throw error for invalid mnemonic', () => {
+      expect(() => revealableSeedFromMnemonic('invalid mnemonic', testPassword)).toThrow();
+    });
+
+    it('should throw error for invalid password', () => {
+      expect(() => revealableSeedFromMnemonic(testMnemonic, '')).toThrow();
+    });
+
+    it('should match snapshot', () => {
+      const rs = revealableSeedFromMnemonic(testMnemonic, testPassword);
+      expect(rs).toMatchSnapshot();
+    });
+  });
+
+  describe('revealableSeedFromTonMnemonic', () => {
+    const testMnemonic = 'test test test test test test test test test test test test test test test test test test test test test test test test';
+    const testPassword = 'test123';
+
+    it('should generate revealable seed from TON mnemonic', () => {
+      const rs = revealableSeedFromTonMnemonic(testMnemonic, testPassword);
+      expect(rs).toBeDefined();
+      expect(rs.startsWith('|RP|')).toBe(true); // Check for HD credential prefix
+      
+      // Decrypt and verify the content
+      const decrypted = decryptRevealableSeed({
+        rs,
+        password: testPassword,
+      });
+      expect(decrypted.entropyWithLangPrefixed).toBeInstanceOf(Buffer);
+      expect(decrypted.seed).toBeInstanceOf(Buffer);
+    });
+
+    it('should throw error for invalid mnemonic', () => {
+      expect(() => revealableSeedFromTonMnemonic('invalid mnemonic', testPassword)).toThrow();
+    });
+
+    it('should match snapshot', () => {
+      const rs = revealableSeedFromTonMnemonic(testMnemonic, testPassword);
+      expect(rs).toMatchSnapshot();
+    });
+  });
+
+  describe('tonMnemonicFromEntropy', () => {
+    const testPassword = 'test123';
+    const testEntropy = Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex');
+    const encryptedSeed = encryptRevealableSeed({
+      rs: {
+        entropyWithLangPrefixed: testEntropy.toString('hex'),
+        seed: Buffer.from('test seed').toString('hex'),
+      },
+      password: testPassword,
+    });
+
+    it('should generate TON mnemonic from entropy', () => {
+      const mnemonic = tonMnemonicFromEntropy(encryptedSeed, testPassword);
+      expect(typeof mnemonic).toBe('string');
+      expect(mnemonic.split(' ').length).toBe(24); // TON uses 24 words
+    });
+
+    it('should throw error for invalid entropy length', () => {
+      const invalidEntropy = Buffer.from('0123456789abcdef', 'hex');
+      const invalidEncryptedSeed = encryptRevealableSeed({
+        rs: {
+          entropyWithLangPrefixed: invalidEntropy.toString('hex'),
+          seed: Buffer.from('test seed').toString('hex'),
+        },
+        password: testPassword,
+      });
+      expect(() => tonMnemonicFromEntropy(invalidEncryptedSeed, testPassword)).toThrow();
+    });
+
+    it('should throw error for invalid password', () => {
+      expect(() => tonMnemonicFromEntropy(encryptedSeed, 'wrong-password')).toThrow();
+    });
+
+    it('should match snapshot', () => {
+      const mnemonic = tonMnemonicFromEntropy(encryptedSeed, testPassword);
+      expect(mnemonic).toMatchSnapshot();
+    });
+  });
+
+  describe('sign', () => {
+    const testPassword = 'test123';
+    const privateKey = encrypt(testPassword, Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex'));
+    const message = Buffer.from('test message');
+
+    it('should sign message with secp256k1', () => {
+      const signature = sign('secp256k1', privateKey, message, testPassword);
+      expect(signature).toBeInstanceOf(Buffer);
+      expect(signature.length).toBeGreaterThan(0);
+    });
+
+    it('should sign message with nistp256', () => {
+      const signature = sign('nistp256', privateKey, message, testPassword);
+      expect(signature).toBeInstanceOf(Buffer);
+      expect(signature.length).toBeGreaterThan(0);
+    });
+
+    it('should sign message with ed25519', () => {
+      const signature = sign('ed25519', privateKey, message, testPassword);
+      expect(signature).toBeInstanceOf(Buffer);
+      expect(signature.length).toBe(64); // Ed25519 signatures are 64 bytes
+    });
+
+    it('should throw error for invalid curve', () => {
+      expect(() => sign('invalid-curve' as ICurveName, privateKey, message, testPassword)).toThrow();
+    });
+
+    it('should throw error for invalid password', () => {
+      expect(() => sign('secp256k1', privateKey, message, 'wrong-password')).toThrow();
+    });
+
+    it('should match snapshot', () => {
+      const signature = sign('secp256k1', privateKey, message, testPassword);
+      expect(signature).toMatchSnapshot();
+    });
+  });
+
+  describe('uncompressPublicKey', () => {
+    const testPassword = 'test123';
+    const privateKey = encrypt(testPassword, Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex'));
+
+    it('should uncompress secp256k1 public key', () => {
+      const compressedKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      const uncompressedKey = uncompressPublicKey('secp256k1', compressedKey);
+      expect(uncompressedKey).toBeInstanceOf(Buffer);
+      expect(uncompressedKey.length).toBe(65); // Uncompressed public key length
+    });
+
+    it('should uncompress nistp256 public key', () => {
+      const compressedKey = publicFromPrivate('nistp256', privateKey, testPassword);
+      const uncompressedKey = uncompressPublicKey('nistp256', compressedKey);
+      expect(uncompressedKey).toBeInstanceOf(Buffer);
+      expect(uncompressedKey.length).toBe(65); // Uncompressed public key length
+    });
+
+
+    it('should throw error for invalid curve', () => {
+      const compressedKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      expect(() => uncompressPublicKey('invalid-curve' as ICurveName, compressedKey)).toThrow();
+    });
+
+    it('should throw error for invalid public key', () => {
+      const invalidKey = Buffer.from('invalid key');
+      expect(() => uncompressPublicKey('secp256k1', invalidKey)).toThrow();
+    });
+
+    it('should match snapshot', () => {
+      const compressedKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      const uncompressedKey = uncompressPublicKey('secp256k1', compressedKey);
+      expect(uncompressedKey).toMatchSnapshot();
+    });
+  });
+
+  describe('verify', () => {
+    const testPassword = 'test123';
+    const privateKey = encrypt(testPassword, Buffer.from('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'hex'));
+    const message = Buffer.from('test message');
+
+    it('should verify signature with secp256k1', () => {
+      const signature = sign('secp256k1', privateKey, message, testPassword);
+      const publicKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      expect(verify('secp256k1', publicKey, message, signature)).toBe(true);
+    });
+
+    it('should verify signature with nistp256', () => {
+      const signature = sign('nistp256', privateKey, message, testPassword);
+      const publicKey = publicFromPrivate('nistp256', privateKey, testPassword);
+      expect(verify('nistp256', publicKey, message, signature)).toBe(true);
+    });
+
+    it('should verify signature with ed25519', () => {
+      const signature = sign('ed25519', privateKey, message, testPassword);
+      const publicKey = publicFromPrivate('ed25519', privateKey, testPassword);
+      expect(verify('ed25519', publicKey, message, signature)).toBe(true);
+    });
+
+    it('should return false for invalid signature', () => {
+      const publicKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      const invalidSignature = Buffer.from('invalid signature');
+      expect(verify('secp256k1', publicKey, message, invalidSignature)).toBe(false);
+    });
+
+    it('should throw error for invalid curve', () => {
+      const signature = sign('secp256k1', privateKey, message, testPassword);
+      const publicKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      expect(() => verify('invalid-curve' as ICurveName, publicKey, message, signature)).toThrow();
+    });
+
+    it('should match snapshot', () => {
+      const signature = sign('secp256k1', privateKey, message, testPassword);
+      const publicKey = publicFromPrivate('secp256k1', privateKey, testPassword);
+      const result = verify('secp256k1', publicKey, message, signature);
+      expect(result).toMatchSnapshot();
     });
   });
 });
