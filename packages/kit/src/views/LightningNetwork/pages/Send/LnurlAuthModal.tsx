@@ -18,10 +18,7 @@ import type {
 } from '@onekeyhq/shared/src/routes';
 import { EDAppModalPageStatus } from '@onekeyhq/shared/types/dappConnection';
 
-import {
-  DAppAccountListStandAloneItem,
-  DAppAccountListStandAloneItemForHomeScene,
-} from '../../../DAppConnection/components/DAppAccountList';
+import { StaticDAppConnectionInfoAloneItem } from '../../../DAppConnection/components/DAppAccountList';
 import { DAppRequestedPermissionContent } from '../../../DAppConnection/components/DAppRequestContent';
 import {
   DAppRequestFooter,
@@ -236,11 +233,10 @@ function LnurlAuthModal() {
             origin={origin ?? ''}
             urlSecurityInfo={urlSecurityInfo}
           >
-            {isSendFlow ? (
-              <DAppAccountListStandAloneItemForHomeScene />
-            ) : (
-              <DAppAccountListStandAloneItem readonly />
-            )}
+            <StaticDAppConnectionInfoAloneItem
+              accountId={accountId}
+              networkId={networkId}
+            />
             {renderRequestPermissions()}
           </DAppRequestLayout>
         </Page.Body>

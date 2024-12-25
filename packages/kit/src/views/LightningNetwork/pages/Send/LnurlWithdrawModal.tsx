@@ -17,10 +17,7 @@ import type {
 } from '@onekeyhq/shared/src/routes';
 import { EDAppModalPageStatus } from '@onekeyhq/shared/types/dappConnection';
 
-import {
-  DAppAccountListStandAloneItem,
-  DAppAccountListStandAloneItemForHomeScene,
-} from '../../../DAppConnection/components/DAppAccountList';
+import { StaticDAppConnectionInfoAloneItem } from '../../../DAppConnection/components/DAppAccountList';
 import {
   DAppRequestFooter,
   DAppRequestLayout,
@@ -162,11 +159,10 @@ function LnurlWithdrawModal() {
             origin={origin ?? ''}
             urlSecurityInfo={urlSecurityInfo}
           >
-            {isSendFlow ? (
-              <DAppAccountListStandAloneItemForHomeScene />
-            ) : (
-              <DAppAccountListStandAloneItem readonly />
-            )}
+            <StaticDAppConnectionInfoAloneItem
+              accountId={accountId}
+              networkId={networkId}
+            />
             <LNMakeInvoiceForm
               accountId={accountId}
               networkId={networkId}
