@@ -13,9 +13,7 @@ import {
 import { ed25519, nistp256, secp256k1 } from './curves';
 import {
   decrypt,
-  encrypt,
   encryptAsync,
-  encryptString,
   encryptStringAsync,
   ensureSensitiveTextEncoded,
 } from './encryptors/aes256';
