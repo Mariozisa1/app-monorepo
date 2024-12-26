@@ -1,4 +1,8 @@
 import safeStringify from 'fast-safe-stringify';
+import { isString } from 'lodash';
+import validator from 'validator';
+
+import { generateUUID } from './miscUtils';
 
 export function equalsIgnoreCase(
   a: string | undefined | null,
@@ -32,7 +36,17 @@ export function capitalizeWords(str: string): string {
   return str.replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
+function isValidEmail(email: string): boolean {
+  if (!email || !isString(email)) {
+    return false;
+  }
+  return validator.isEmail(email);
+}
+
 export default {
+  generateUUID,
+  validator,
+  isValidEmail,
   stableStringify,
   safeStringify,
   randomString,

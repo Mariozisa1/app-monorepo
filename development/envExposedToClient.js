@@ -21,6 +21,7 @@ function buildEnvExposedToClientDangerously({ platform }) {
     'GITHUB_SHA',
     'STORYBOOK_ENABLED',
     'WALLETCONNECT_PROJECT_ID',
+    'PRIVY_APP_ID',
   ];
 
   if (platform === developmentConsts.platforms.app) {

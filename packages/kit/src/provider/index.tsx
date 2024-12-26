@@ -15,6 +15,7 @@ import { ColdStartByNotification, Container } from './Container';
 import InAppNotification from './Container/InAppNotification';
 import { NetworkReachabilityTracker } from './Container/NetworkReachabilityTracker';
 import { StateActiveContainer } from './Container/StateActiveContainer';
+import { PrivyProvider } from './PrivyProvider';
 import { SplashProvider } from './SplashProvider';
 import { ThemeProvider } from './ThemeProvider';
 import { WebViewWebEmbedProvider } from './WebViewWebEmbedProvider';
@@ -43,22 +44,24 @@ export function KitProvider(props: any = {}) {
 
   useDebugComponentRemountLog({ name: 'KitProvider' });
   return (
-    <GlobalJotaiReady>
-      <GestureHandlerRootView style={flexStyle}>
-        <ThemeProvider>
-          <NetworkReachabilityTracker />
-          <SplashProvider>
-            <Container />
-          </SplashProvider>
-          <PasswordVerifyPromptMount />
-          <WebViewWebEmbedProvider />
-          <LastActivityTracker />
-          <SystemLocaleTracker />
-          <StateActiveContainer />
-          <InAppNotification />
-          <SyncHomeAccountToDappAccountProvider />
-        </ThemeProvider>
-      </GestureHandlerRootView>
-    </GlobalJotaiReady>
+    <PrivyProvider>
+      <GlobalJotaiReady>
+        <GestureHandlerRootView style={flexStyle}>
+          <ThemeProvider>
+            <NetworkReachabilityTracker />
+            <SplashProvider>
+              <Container />
+            </SplashProvider>
+            <PasswordVerifyPromptMount />
+            <WebViewWebEmbedProvider />
+            <LastActivityTracker />
+            <SystemLocaleTracker />
+            <StateActiveContainer />
+            <InAppNotification />
+            <SyncHomeAccountToDappAccountProvider />
+          </ThemeProvider>
+        </GestureHandlerRootView>
+      </GlobalJotaiReady>
+    </PrivyProvider>
   );
 }

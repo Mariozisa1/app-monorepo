@@ -9,14 +9,7 @@ import { Fieldset, Form as TMForm, withStaticProperties } from 'tamagui';
 import { ETranslations } from '@onekeyhq/shared/src/locale';
 
 import { HeightTransition } from '../../content';
-import {
-  Label,
-  SizableText,
-  Stack,
-  View,
-  XStack,
-  YStack,
-} from '../../primitives';
+import { Label, SizableText, Stack, XStack, YStack } from '../../primitives';
 import { Input } from '../Input';
 import { TextArea, TextAreaInput } from '../TextArea';
 
@@ -100,7 +93,7 @@ type IFieldProps = Omit<GetProps<typeof Controller>, 'render'> &
     description?: string | ReactNode;
     horizontal?: boolean;
     optional?: boolean;
-    labelAddon?: string | ReactElement;
+    labelAddon?: string | ReactElement | ReactNode;
   }>;
 
 function Field({
