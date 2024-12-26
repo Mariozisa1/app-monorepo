@@ -181,7 +181,8 @@ function PrimeSubscriptionPlans() {
 }
 
 export default function PrimeDashboard() {
-  const { login, logout, privy, getAccessToken, user } = usePrimeAuth();
+  const { login, loginLegacy, logout, privy, getAccessToken, user } =
+    usePrimeAuth();
 
   const { result } = useFetchPrimeUserInfo();
 
@@ -189,20 +190,9 @@ export default function PrimeDashboard() {
     login();
 
     if (!user?.isLoggedIn) {
-      // try {
-      //   const email = await backgroundApiProxy.servicePrime.startPrimeLogin();
-      //   console.log('prime email >>> ', email);
-      //   Toast.success({
-      //     title: `Prime login success: ${email.email}`,
-      //   });
-      // } catch (error) {
-      //   console.error(error);
-      //   Toast.error({
-      //     title: `login failed: ${(error as IOneKeyError)?.message || ''}`,
-      //   });
-      // }
+      // loginLegacy();
     }
-  }, [user?.isLoggedIn, login]);
+  }, [login, user?.isLoggedIn]);
 
   const shouldShowConfirmButton = useMemo(() => {
     if (!user?.isLoggedIn) {
@@ -230,31 +220,40 @@ export default function PrimeDashboard() {
           </Stack>
           <Divider />
           <PrimeBenefitsList />
-          <Button
-            onPress={() => {
-              void logout();
-            }}
-          >
-            Logout
-          </Button>
-          <Button
-            onPress={() => {
-              void getAccessToken().then(console.log);
-            }}
-          >
-            Get Access Token
-          </Button>
-          <Button
-            onPress={() => {
-              console.log({
-                ready: privy.ready,
-                authenticated: privy.authenticated,
-                user: privy.user,
-              });
-            }}
-          >
-            User Info
-          </Button>
+          <XStack>
+            <Button
+              onPress={() => {
+                void loginLegacy();
+              }}
+            >
+              Login Legacy
+            </Button>
+            <Button
+              onPress={() => {
+                void logout();
+              }}
+            >
+              Logout
+            </Button>
+            <Button
+              onPress={() => {
+                void getAccessToken().then(console.log);
+              }}
+            >
+              Get Access Token
+            </Button>
+            <Button
+              onPress={() => {
+                console.log({
+                  ready: privy.ready,
+                  authenticated: privy.authenticated,
+                  user: privy.user,
+                });
+              }}
+            >
+              User Info
+            </Button>
+          </XStack>
         </Stack>
       </Page.Body>
       <Page.Footer

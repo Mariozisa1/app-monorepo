@@ -1,11 +1,15 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { usePrivy, useLogin as usePrivyLogin } from '@privy-io/react-auth';
 
+import { Toast } from '@onekeyhq/components';
 import {
   usePrimeInitAtom,
   usePrimePersistAtom,
 } from '@onekeyhq/kit-bg/src/states/jotai/atoms';
+import type { IOneKeyError } from '@onekeyhq/shared/src/errors/types/errorTypes';
+
+import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 
 export function usePrimeAuth() {
   const [primePersistAtom, setPrimePersistAtom] = usePrimePersistAtom();
@@ -52,6 +56,21 @@ export function usePrimeAuth() {
     },
   });
 
+  const loginLegacy = useCallback(async () => {
+    try {
+      const email = await backgroundApiProxy.servicePrime.startPrimeLogin();
+      console.log('prime email >>> ', email);
+      Toast.success({
+        title: `Prime login success: ${email.email}`,
+      });
+    } catch (error) {
+      console.error(error);
+      Toast.error({
+        title: `login failed: ${(error as IOneKeyError)?.message || ''}`,
+      });
+    }
+  }, []);
+
   return useMemo(
     () => ({
       // you should check isReady before use other methods
@@ -60,6 +79,7 @@ export function usePrimeAuth() {
       user: primePersistAtom,
       privy,
       login,
+      loginLegacy,
       logout,
       updateEmail,
       updatePhone,
@@ -68,6 +88,7 @@ export function usePrimeAuth() {
     [
       getAccessToken,
       login,
+      loginLegacy,
       logout,
       primeInitAtom,
       primePersistAtom,
