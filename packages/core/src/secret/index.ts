@@ -1,5 +1,6 @@
 import appGlobals from '@onekeyhq/shared/src/appGlobals';
 import { DEFAULT_VERIFY_STRING } from '@onekeyhq/shared/src/consts/dbConsts';
+import { InvalidMnemonic } from '@onekeyhq/shared/src/errors';
 import { defaultLogger } from '@onekeyhq/shared/src/logger/logger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import bufferUtils from '@onekeyhq/shared/src/utils/bufferUtils';
@@ -41,7 +42,6 @@ import type {
   ICoreImportedCredentialEncryptHex,
   ICurveName,
 } from '../types';
-import { InvalidMnemonic } from '@onekeyhq/shared/src/errors';
 
 export * from './bip32';
 export * from './bip340';
