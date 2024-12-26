@@ -1,0 +1,4 @@
+- [ ] privy server is down, ready=false, show Error on Dashboard UI
+- [ ] refresh token if server says expired
+- [ ] re-login if user token is logout (can getAccessToken() auto handle it?)
+- [ ]

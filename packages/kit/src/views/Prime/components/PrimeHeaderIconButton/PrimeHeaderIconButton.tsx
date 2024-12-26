@@ -6,6 +6,7 @@ import { HeaderIconButton } from '@onekeyhq/components';
 import useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
 import { EModalRoutes } from '@onekeyhq/shared/src/routes';
 import { EPrimePages } from '@onekeyhq/shared/src/routes/prime';
+
 import { usePrimeAuth } from '../../hooks/usePrimeAuth';
 
 export function PrimeHeaderIconButton() {
