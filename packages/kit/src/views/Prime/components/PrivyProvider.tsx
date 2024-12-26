@@ -1,5 +1,12 @@
 import { PrivyProvider as PrivyProviderBase } from '@privy-io/react-auth';
 
+import { usePrivyAuthSyncToAtom } from '../hooks/usePrivyAuthSyncToAtom';
+
+function PrivyAuthSyncToAtom() {
+  usePrivyAuthSyncToAtom();
+  return null;
+}
+
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
   const appId = process.env.PRIVY_APP_ID ?? '';
   if (!appId) {
@@ -18,6 +25,7 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
         ],
       }}
     >
+      <PrivyAuthSyncToAtom />
       {children}
     </PrivyProviderBase>
   );

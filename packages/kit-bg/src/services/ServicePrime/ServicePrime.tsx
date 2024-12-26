@@ -59,7 +59,7 @@ class ServicePrime extends ServiceBase {
   }
 
   @backgroundMethod()
-  async apiPrimeUserInfo(): Promise<IPrimeUserInfo> {
+  async apiFetchPrimeUserInfo(): Promise<IPrimeUserInfo> {
     const authToken = await this.backgroundApi.simpleDb.prime.getAuthToken();
     if (!authToken) {
       await this.setPrimePersistAtomNotLoggedIn();

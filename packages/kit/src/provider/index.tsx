@@ -10,12 +10,12 @@ import { useDebugComponentRemountLog } from '@onekeyhq/shared/src/utils/debug/de
 import { GlobalJotaiReady } from '../components/GlobalJotaiReady';
 import PasswordVerifyPromptMount from '../components/Password/container/PasswordVerifyPromptMount';
 import { SystemLocaleTracker } from '../components/SystemLocaleTracker';
+import { PrivyProvider } from '../views/Prime/components/PrivyProvider';
 
 import { ColdStartByNotification, Container } from './Container';
 import InAppNotification from './Container/InAppNotification';
 import { NetworkReachabilityTracker } from './Container/NetworkReachabilityTracker';
 import { StateActiveContainer } from './Container/StateActiveContainer';
-import { PrivyProvider } from './PrivyProvider';
 import { SplashProvider } from './SplashProvider';
 import { ThemeProvider } from './ThemeProvider';
 import { WebViewWebEmbedProvider } from './WebViewWebEmbedProvider';

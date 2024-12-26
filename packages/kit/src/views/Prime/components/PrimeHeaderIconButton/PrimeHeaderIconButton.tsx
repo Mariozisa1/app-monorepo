@@ -4,12 +4,12 @@ import { useIntl } from 'react-intl';
 
 import { HeaderIconButton } from '@onekeyhq/components';
 import useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
-import { usePrimePersistAtom } from '@onekeyhq/kit-bg/src/states/jotai/atoms';
 import { EModalRoutes } from '@onekeyhq/shared/src/routes';
 import { EPrimePages } from '@onekeyhq/shared/src/routes/prime';
+import { usePrimeAuth } from '../../hooks/usePrimeAuth';
 
 export function PrimeHeaderIconButton() {
-  const [primePersistAtom, setPrimePersistAtom] = usePrimePersistAtom();
+  const { user, isReady } = usePrimeAuth();
   const intl = useIntl();
   const navigation = useAppNavigation();
 
@@ -26,13 +26,9 @@ export function PrimeHeaderIconButton() {
         'Prime'
         // intl.formatMessage({ id: ETranslations.global_prime })
       }
-      icon={
-        primePersistAtom?.isLoggedIn
-          ? 'KingVipCrownSolid'
-          : 'KingVipCrownOutline'
-      }
+      icon={user?.isLoggedIn ? 'KingVipCrownSolid' : 'KingVipCrownOutline'}
       iconProps={{
-        color: primePersistAtom?.isLoggedIn ? '$iconSuccess' : undefined,
+        color: user?.isLoggedIn ? '$iconSuccess' : undefined,
       }}
       onPress={onPrimeButtonPressed}
     />

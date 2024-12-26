@@ -1,15 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { usePrivy, useLogin as usePrivyLogin } from '@privy-io/react-auth';
-
 import type { IKeyOfIcons } from '@onekeyhq/components';
 import {
-  ActionList,
-  Badge,
   Button,
   Divider,
   Icon,
-  IconButton,
   Page,
   SizableText,
   Stack,
@@ -17,10 +12,12 @@ import {
   XStack,
   YStack,
 } from '@onekeyhq/components';
-import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import { ListItem } from '@onekeyhq/kit/src/components/ListItem';
-import { usePromiseResult } from '@onekeyhq/kit/src/hooks/usePromiseResult';
-import { usePrimePersistAtom } from '@onekeyhq/kit-bg/src/states/jotai/atoms';
+
+import { useFetchPrimeUserInfo } from '../../hooks/useFetchPrimeUserInfo';
+import { usePrimeAuth } from '../../hooks/usePrimeAuth';
+
+import { PrimeUserInfo } from './PrimeUserInfo';
 
 function PrimeBanner() {
   return (
@@ -183,164 +180,15 @@ function PrimeSubscriptionPlans() {
   );
 }
 
-function PrimeUserInfoMoreButton() {
-  const renderItems = useCallback(
-    ({
-      handleActionListClose,
-    }: {
-      handleActionListClose: () => void;
-      handleActionListOpen: () => void;
-    }) => {
-      const userInfo = (
-        <Stack px="$2" py="$3">
-          <XStack alignItems="center">
-            <SizableText size="$headingSm">hello@example.com</SizableText>
-            <Stack flex={1} />
-            <Badge badgeType="warning" badgeSize="sm">
-              Prime
-            </Badge>
-          </XStack>
-          <SizableText size="$bodyMd" color="$textSubdued">
-            Ends on December 31, 2023.
-          </SizableText>
-        </Stack>
-      );
-      return (
-        <>
-          {userInfo}
-          <ActionList.Item
-            label="Change email"
-            icon="EmailOutline"
-            onClose={handleActionListClose}
-          />
-          <ActionList.Item
-            label="Change password"
-            icon="PasswordOutline"
-            onClose={handleActionListClose}
-          />
-          <ActionList.Item
-            label="Manage subscription"
-            icon="CreditCardOutline"
-            onClose={handleActionListClose}
-          />
-          <Divider mx="$2" my="$1" />
-          <ActionList.Item
-            label="Log out"
-            icon="LogoutOutline"
-            onClose={handleActionListClose}
-          />
-        </>
-      );
-    },
-    [],
-  );
-  return (
-    <ActionList
-      title="Account"
-      renderItems={renderItems}
-      renderTrigger={
-        <IconButton
-          ml="$2"
-          icon="MoreIllus"
-          iconProps={{ color: '$iconSubdued' }}
-          // variant="ghost"
-          variant="tertiary"
-          size="small"
-          onPress={() => {
-            console.log('1');
-          }}
-        />
-      }
-    />
-  );
-}
-
-function PrimeUserInfo() {
-  return (
-    <XStack
-      px="$4"
-      mb="$5"
-      h="$12"
-      alignItems="center"
-      borderColor="$borderSubdued"
-      borderWidth={1}
-      borderRadius="$3"
-    >
-      <Icon name="FolderUserOutline" color="$iconSubdued" />
-      <SizableText mx="$2" size="$bodyMdMedium">
-        hello@example.com
-      </SizableText>
-      <Stack flex={1} />
-      <Badge badgeType="warning" badgeSize="sm">
-        Prime
-      </Badge>
-      <Badge badgeType="critical" badgeSize="sm">
-        Prime
-      </Badge>
-      <Badge badgeType="info" badgeSize="sm">
-        Prime
-      </Badge>
-      <Badge badgeType="success" badgeSize="sm">
-        Prime
-      </Badge>
-      <Badge badgeType="default" badgeSize="sm">
-        Free
-      </Badge>
-      <PrimeUserInfoMoreButton />
-    </XStack>
-  );
-}
-
 export default function PrimeDashboard() {
-  const [primePersistAtom, setPrimePersistAtom] = usePrimePersistAtom();
+  const { login, logout, privy, getAccessToken, user } = usePrimeAuth();
 
-  // https://github.com/privy-io/create-next-app/blob/main/pages/index.tsx
-  const {
-    ready,
-    authenticated,
-    user,
-    logout,
-    linkEmail,
-    linkWallet,
-    unlinkEmail,
-    linkPhone,
-    unlinkPhone,
-    unlinkWallet,
-    linkGoogle,
-    unlinkGoogle,
-    linkTwitter,
-    unlinkTwitter,
-    linkDiscord,
-    unlinkDiscord,
-    getAccessToken,
-  } = usePrivy();
-  const { login } = usePrivyLogin({
-    onComplete(
-      user0,
-      isNewUser,
-      wasAlreadyAuthenticated,
-      loginMethod,
-      loginAccount,
-    ) {
-      console.log('privy login complete >>> ', {
-        user0,
-        isNewUser,
-        wasAlreadyAuthenticated,
-        loginMethod,
-        loginAccount,
-      });
-    },
-  });
-
-  const { result } = usePromiseResult(async () => {
-    const userInfo = await backgroundApiProxy.servicePrime.apiPrimeUserInfo();
-    return userInfo;
-  }, []);
+  const { result } = useFetchPrimeUserInfo();
 
   const onConfirm = useCallback(async () => {
     login();
 
-    if (!primePersistAtom?.isLoggedIn) {
+    if (!user?.isLoggedIn) {
       // try {
       //   const email = await backgroundApiProxy.servicePrime.startPrimeLogin();
       //   console.log('prime email >>> ', email);
@@ -354,20 +202,17 @@ export default function PrimeDashboard() {
       //   });
       // }
     }
-  }, [primePersistAtom?.isLoggedIn, login]);
+  }, [user?.isLoggedIn, login]);
 
   const shouldShowConfirmButton = useMemo(() => {
-    if (!primePersistAtom?.isLoggedIn) {
+    if (!user?.isLoggedIn) {
       return true;
     }
-    if (
-      primePersistAtom?.isLoggedIn &&
-      !primePersistAtom?.primeSubscription?.isActive
-    ) {
+    if (user?.isLoggedIn && !user?.primeSubscription?.isActive) {
       return true;
     }
     return false;
-  }, [primePersistAtom?.isLoggedIn, primePersistAtom?.primeSubscription]);
+  }, [user?.isLoggedIn, user?.primeSubscription]);
 
   return (
     <Page scrollEnabled>
@@ -376,7 +221,7 @@ export default function PrimeDashboard() {
         <Stack>
           <Stack px="$4">
             <PrimeBanner />
-            {primePersistAtom?.isLoggedIn ? (
+            {user?.isLoggedIn ? (
               <>
                 <PrimeUserInfo />
                 <PrimeSubscriptionPlans />
@@ -401,7 +246,11 @@ export default function PrimeDashboard() {
           </Button>
           <Button
             onPress={() => {
-              console.log({ ready, authenticated, user });
+              console.log({
+                ready: privy.ready,
+                authenticated: privy.authenticated,
+                user: privy.user,
+              });
             }}
           >
             User Info

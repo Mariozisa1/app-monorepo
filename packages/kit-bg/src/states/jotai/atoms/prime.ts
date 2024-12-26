@@ -18,6 +18,17 @@ export const {
   },
 });
 
+export type IPrimeInitAtomData = {
+  isReady: boolean;
+};
+export const { target: primeInitAtom, use: usePrimeInitAtom } =
+  globalAtom<IPrimeInitAtomData>({
+    name: EAtomNames.primeInitAtom,
+    initialValue: {
+      isReady: false,
+    },
+  });
+
 export type IPrimeLoginDialogAtomPasswordData = {
   isRegister?: boolean;
   email: string;
