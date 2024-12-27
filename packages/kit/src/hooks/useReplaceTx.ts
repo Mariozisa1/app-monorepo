@@ -43,12 +43,33 @@ function useReplaceTx({
 
     if (!vaultSettings.replaceTxEnabled) return false;
 
-    return backgroundApiProxy.serviceHistory.isEarliestLocalPendingTx({
+    return backgroundApiProxy.serviceHistory.canAccelerateTx({
       accountId,
       networkId,
       encodedTx,
+      txId: historyTx.decodedTx.txid,
     });
   }, [historyTx, isConfirmed]).result;
+
+  const { result: cancelTxConfig } = usePromiseResult(async () => {
+    const defaultConfig = {
+      cancelTxEnabled: false,
+      speedUpCancelEnabled: false,
+    };
+    if (!historyTx) return defaultConfig;
+    if (isConfirmed) return defaultConfig;
+    const { networkId } = historyTx.decodedTx;
+
+    const vaultSettings =
+      await backgroundApiProxy.serviceNetwork.getVaultSettings({
+        networkId,
+      });
+
+    return {
+      cancelTxEnabled: vaultSettings.cancelTxEnabled,
+      speedUpCancelEnabled: vaultSettings.speedUpCancelEnabled,
+    };
+  }, [historyTx, isConfirmed]);
 
   const canCancelTx = historyTx
     ? historyTx.replacedType !== EReplaceTxType.Cancel
@@ -100,7 +121,13 @@ function useReplaceTx({
     [canReplaceTx, historyTx, intl, navigation, onSuccess],
   );
 
-  return { canReplaceTx, canCancelTx, handleReplaceTx };
+  return {
+    canReplaceTx,
+    canCancelTx,
+    cancelTxEnabled: cancelTxConfig?.cancelTxEnabled,
+    speedUpCancelEnabled: cancelTxConfig?.speedUpCancelEnabled,
+    handleReplaceTx,
+  };
 }
 
 export { useReplaceTx };

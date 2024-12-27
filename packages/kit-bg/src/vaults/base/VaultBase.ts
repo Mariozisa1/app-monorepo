@@ -1205,10 +1205,12 @@ export abstract class VaultBase extends VaultBaseChainOnly {
     return Promise.resolve(accountDetails);
   }
 
-  async isEarliestLocalPendingTx({
+  async canAccelerateTx({
     encodedTx,
+    txId,
   }: {
     encodedTx: IEncodedTx;
+    txId: string;
   }): Promise<boolean> {
     return true;
   }

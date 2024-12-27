@@ -228,3 +228,9 @@ export type IReplaceTxInfo = {
   replaceType: EReplaceTxType;
   replaceHistoryId: string;
 };
+
+export enum EBtcF2poolReplaceState {
+  NOT_ACCELERATED = 0,
+  ACCELERATED_PENDING = 1,
+  ACCELERATED_CONFIRMED = 2,
+}

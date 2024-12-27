@@ -26,7 +26,13 @@ function TxHistoryListItem(props: IProps) {
   const { historyTx, tableLayout, onPress, showIcon, hideValue } = props;
   const intl = useIntl();
 
-  const { canReplaceTx, canCancelTx, handleReplaceTx } = useReplaceTx({
+  const {
+    canReplaceTx,
+    canCancelTx,
+    cancelTxEnabled,
+    speedUpCancelEnabled,
+    handleReplaceTx,
+  } = useReplaceTx({
     historyTx,
   });
 
@@ -52,30 +58,40 @@ function TxHistoryListItem(props: IProps) {
             >
               {intl.formatMessage({ id: ETranslations.global_speed_up })}
             </Button>
-            <Button
-              size="small"
-              onPress={() =>
-                handleReplaceTx({ replaceType: EReplaceTxType.Cancel })
-              }
-            >
-              {intl.formatMessage({ id: ETranslations.global_cancel })}
-            </Button>
+            {cancelTxEnabled ? (
+              <Button
+                size="small"
+                onPress={() =>
+                  handleReplaceTx({ replaceType: EReplaceTxType.Cancel })
+                }
+              >
+                {intl.formatMessage({ id: ETranslations.global_cancel })}
+              </Button>
+            ) : null}
           </XStack>
         ) : (
-          <Button
-            size="small"
-            variant="primary"
-            onPress={() =>
-              handleReplaceTx({ replaceType: EReplaceTxType.SpeedUp })
-            }
-          >
-            {intl.formatMessage({ id: ETranslations.speed_up_cancellation })}
-          </Button>
+          <>
+            {speedUpCancelEnabled ? (
+              <Button
+                size="small"
+                variant="primary"
+                onPress={() =>
+                  handleReplaceTx({ replaceType: EReplaceTxType.SpeedUp })
+                }
+              >
+                {intl.formatMessage({
+                  id: ETranslations.speed_up_cancellation,
+                })}
+              </Button>
+            ) : null}
+          </>
         )}
       </XStack>
     );
   }, [
     canCancelTx,
+    cancelTxEnabled,
+    speedUpCancelEnabled,
     canReplaceTx,
     handleReplaceTx,
     historyTx.decodedTx.status,

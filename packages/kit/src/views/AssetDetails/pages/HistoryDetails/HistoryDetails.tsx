@@ -424,7 +424,13 @@ function HistoryDetails() {
     navigation.popStack();
   }, [navigation]);
 
-  const { handleReplaceTx, canReplaceTx, canCancelTx } = useReplaceTx({
+  const {
+    handleReplaceTx,
+    canReplaceTx,
+    canCancelTx,
+    cancelTxEnabled,
+    speedUpCancelEnabled,
+  } = useReplaceTx({
     historyTx,
     onSuccess: handleReplaceTxSuccess,
     isConfirmed:
@@ -741,30 +747,44 @@ function HistoryDetails() {
             >
               {intl.formatMessage({ id: ETranslations.global_speed_up })}
             </Button>
-            <Button
-              size="small"
-              variant="secondary"
-              onPress={() =>
-                handleReplaceTx({ replaceType: EReplaceTxType.Cancel })
-              }
-            >
-              {intl.formatMessage({ id: ETranslations.global_cancel })}
-            </Button>
+            {cancelTxEnabled ? (
+              <Button
+                size="small"
+                onPress={() =>
+                  handleReplaceTx({ replaceType: EReplaceTxType.Cancel })
+                }
+              >
+                {intl.formatMessage({ id: ETranslations.global_cancel })}
+              </Button>
+            ) : null}
           </XStack>
         ) : (
-          <Button
-            size="small"
-            variant="primary"
-            onPress={() =>
-              handleReplaceTx({ replaceType: EReplaceTxType.SpeedUp })
-            }
-          >
-            {intl.formatMessage({ id: ETranslations.speed_up_cancellation })}
-          </Button>
+          <>
+            {speedUpCancelEnabled ? (
+              <Button
+                size="small"
+                variant="primary"
+                onPress={() =>
+                  handleReplaceTx({ replaceType: EReplaceTxType.SpeedUp })
+                }
+              >
+                {intl.formatMessage({
+                  id: ETranslations.speed_up_cancellation,
+                })}
+              </Button>
+            ) : null}
+          </>
         )}
       </XStack>
     );
-  }, [canCancelTx, canReplaceTx, handleReplaceTx, intl]);
+  }, [
+    canCancelTx,
+    canReplaceTx,
+    cancelTxEnabled,
+    speedUpCancelEnabled,
+    handleReplaceTx,
+    intl,
+  ]);
 
   const renderTxStatus = useCallback(() => {
     const { key, color } = getTxStatusTextProps(

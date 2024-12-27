@@ -30,6 +30,7 @@ import {
 import type {
   ICoreApiSignAccount,
   ICoreApiSignBtcExtraInfo,
+  IEncodedTx,
   ISignedTxPro,
   ITxInput,
   ITxInputToSign,
@@ -68,6 +69,7 @@ import type { IFeeInfoUnit } from '@onekeyhq/shared/types/fee';
 import type { IStakeTxBtcBabylon } from '@onekeyhq/shared/types/staking';
 import type { IDecodedTx, IDecodedTxAction } from '@onekeyhq/shared/types/tx';
 import {
+  EBtcF2poolReplaceState,
   EDecodedTxActionType,
   EDecodedTxStatus,
 } from '@onekeyhq/shared/types/tx';
@@ -1452,5 +1454,16 @@ export default class VaultBtc extends VaultBase {
     };
 
     return encodedTx;
+  }
+
+  override async canAccelerateTx({ txId }: { txId: string }): Promise<boolean> {
+    console.log('BTC: canAccelerateTx: ===>>>: txId : ', txId);
+    const replaceState =
+      await this.backgroundApi.serviceHistory.getReplaceInfoForBtc({
+        networkId: this.networkId,
+        accountId: this.accountId,
+        txid: txId,
+      });
+    return replaceState === EBtcF2poolReplaceState.NOT_ACCELERATED;
   }
 }
