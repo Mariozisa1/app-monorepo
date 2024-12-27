@@ -13,10 +13,10 @@ import {
   YStack,
 } from '@onekeyhq/components';
 import { ListItem } from '@onekeyhq/kit/src/components/ListItem';
+import useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import timerUtils from '@onekeyhq/shared/src/utils/timerUtils';
 
-import useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
 import { useFetchPrimeUserInfo } from '../../hooks/useFetchPrimeUserInfo';
 import { usePrimeAuth } from '../../hooks/usePrimeAuth';
 
@@ -228,7 +228,7 @@ export default function PrimeDashboard() {
           </Stack>
           <Divider />
           <PrimeBenefitsList />
-          <XStack>
+          <XStack flexWrap="wrap">
             <Button
               onPress={() => {
                 void loginLegacy();

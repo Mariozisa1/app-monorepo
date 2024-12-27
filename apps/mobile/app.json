@@ -42,7 +42,8 @@
           "organization": "onekey-bb"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ]
   }
 }

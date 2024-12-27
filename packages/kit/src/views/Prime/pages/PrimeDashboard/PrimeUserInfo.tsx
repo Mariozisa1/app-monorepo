@@ -9,19 +9,27 @@ export function PrimeUserInfo() {
   return (
     <XStack
       px="$4"
+      py="$3"
       mb="$5"
-      h="$12"
       alignItems="center"
       borderColor="$borderSubdued"
       borderWidth={1}
       borderRadius="$3"
+      flexWrap="wrap"
     >
       <Icon name="FolderUserOutline" color="$iconSubdued" />
-      <SizableText mx="$2" size="$bodyMdMedium">
-        {user?.email}
-      </SizableText>
-      <Stack flex={1} />
-      <Badge badgeType="warning" badgeSize="sm">
+      <Stack flex={1}>
+        <SizableText
+          mx="$2"
+          size="$bodyMdMedium"
+          ellipse
+          ellipsizeMode="middle"
+        >
+          test_long_email_address_for_testing_ellipsis_mode
+          {user?.email}
+        </SizableText>
+      </Stack>
+      {/* <Badge badgeType="warning" badgeSize="sm">
         Prime
       </Badge>
       <Badge badgeType="critical" badgeSize="sm">
@@ -32,7 +40,7 @@ export function PrimeUserInfo() {
       </Badge>
       <Badge badgeType="success" badgeSize="sm">
         Prime
-      </Badge>
+      </Badge> */}
       <Badge badgeType="default" badgeSize="sm">
         Free
       </Badge>
