@@ -12,6 +12,7 @@ import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import { generateUUID } from '@onekeyhq/shared/src/utils/miscUtils';
 
 import type { InternalAxiosRequestConfig } from 'axios';
+import { headerPlatform } from './InterceptorConsts';
 
 export function normalizeHeaderKey(key: string) {
   return key?.toLowerCase() ?? key;
@@ -53,11 +54,7 @@ export async function checkRequestIsOneKeyDomain({
 
 export const HEADER_REQUEST_ID_KEY = normalizeHeaderKey('X-Onekey-Request-ID');
 
-// Be consistent with backend platform definition
-// https://onekeyhq.atlassian.net/wiki/spaces/ONEKEY/pages/390266887#%E5%85%AC%E5%85%B1%E5%8F%82%E6%95%B0
-export const headerPlatform = [platformEnv.appPlatform, platformEnv.appChannel]
-  .filter(Boolean)
-  .join('-');
+
 
 export async function getRequestHeaders() {
   const settings = await settingsPersistAtom.get();

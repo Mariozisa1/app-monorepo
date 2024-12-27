@@ -22,6 +22,7 @@ function buildEnvExposedToClientDangerously({ platform }) {
     'STORYBOOK_ENABLED',
     'WALLETCONNECT_PROJECT_ID',
     'PRIVY_APP_ID',
+    'PRIVY_MOBILE_CLIENT_ID',
   ];
 
   if (platform === developmentConsts.platforms.app) {
