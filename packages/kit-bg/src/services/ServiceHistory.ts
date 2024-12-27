@@ -9,11 +9,13 @@ import {
 import { getNetworkIdsMap } from '@onekeyhq/shared/src/config/networkIds';
 import type { OneKeyServerApiError } from '@onekeyhq/shared/src/errors';
 import accountUtils from '@onekeyhq/shared/src/utils/accountUtils';
+import { memoizee } from '@onekeyhq/shared/src/utils/cacheUtils';
 import {
   getOnChainHistoryTxStatus,
   isAccountCompatibleWithTx,
 } from '@onekeyhq/shared/src/utils/historyUtils';
 import networkUtils from '@onekeyhq/shared/src/utils/networkUtils';
+import timerUtils from '@onekeyhq/shared/src/utils/timerUtils';
 import { EServiceEndpointEnum } from '@onekeyhq/shared/types/endpoint';
 import type {
   IAccountHistoryTx,
@@ -34,7 +36,11 @@ import type {
   IReplaceTxInfo,
   ISendTxOnSuccessData,
 } from '@onekeyhq/shared/types/tx';
-import { EDecodedTxStatus, EReplaceTxType } from '@onekeyhq/shared/types/tx';
+import {
+  EBtcF2poolReplaceState,
+  EDecodedTxStatus,
+  EReplaceTxType,
+} from '@onekeyhq/shared/types/tx';
 
 import simpleDb from '../dbs/simple/simpleDb';
 import { vaultFactory } from '../vaults/factory';
@@ -73,6 +79,8 @@ class ServiceHistory extends ServiceBase {
         networkId,
       }),
     ]);
+
+    // TODO: network === BTC, query replace tx info
 
     const isAllNetworks = networkUtils.isAllNetwork({ networkId });
 
@@ -1118,18 +1126,109 @@ class ServiceHistory extends ServiceBase {
   }
 
   @backgroundMethod()
-  public async isEarliestLocalPendingTx({
+  public async canAccelerateTx({
     networkId,
     accountId,
     encodedTx,
+    txId,
   }: {
     networkId: string;
     accountId: string;
     encodedTx: IEncodedTx;
+    txId: string;
   }) {
     const vault = await vaultFactory.getVault({ networkId, accountId });
-    return vault.isEarliestLocalPendingTx({ encodedTx });
+    return vault.canAccelerateTx({ encodedTx, txId });
   }
+
+  @backgroundMethod()
+  public async getReplaceInfoForBtc(params: {
+    networkId: string;
+    accountId: string;
+    txid: string;
+  }) {
+    const { networkId, accountId, txid } = params;
+    // 根据 networkId 和 accountId 获取账户对应的 pending Txs
+
+    // 用 pendingTxs 请求接口
+    const [xpub, accountAddress] = await Promise.all([
+      this.backgroundApi.serviceAccount.getAccountXpub({
+        accountId,
+        networkId,
+      }),
+      this.backgroundApi.serviceAccount.getAccountAddressForApi({
+        accountId,
+        networkId,
+      }),
+    ]);
+
+    const pendingTxs =
+      await this.backgroundApi.serviceHistory.getAccountLocalHistoryPendingTxs({
+        networkId,
+        accountAddress,
+        xpub,
+      });
+    console.log('pendingTxs: ===>>>: ', pendingTxs);
+    const pendingTxIds = pendingTxs
+      .filter((tx) => tx.decodedTx.networkId === networkId)
+      .map((tx) => tx.decodedTx.txid);
+
+    const btcReplaceStateMap = await this.fetchBtcReplaceStateFromF2pool({
+      networkId,
+      txIds: pendingTxIds,
+    });
+    return btcReplaceStateMap?.[txid] ?? EBtcF2poolReplaceState.NOT_ACCELERATED;
+  }
+
+  @backgroundMethod()
+  public async fetchBtcReplaceStateFromF2pool(params: {
+    networkId: string;
+    txIds: string[];
+  }) {
+    return this.memoizedFetchBtcReplaceState(params);
+  }
+
+  private memoizedFetchBtcReplaceState = memoizee(
+    async (params: {
+      networkId: string;
+      txIds: string[];
+    }): Promise<Record<string, number>> => {
+      console.log('🚀 实际调用 API:', params.txIds);
+      const { txIds } = params;
+
+      const [btcReplaceStateMap] =
+        await this.backgroundApi.serviceAccountProfile.sendProxyRequest<
+          Record<string, number>
+        >({
+          // TODO: 需要根据 networkId 获取对应的 f2pool 地址
+          networkId: 'btc--0',
+          body: [
+            {
+              route: 'f2pool',
+              params: {
+                url: '/user/tx-acc/onekey-query',
+                method: 'GET',
+                params: {},
+                data: {
+                  txids: txIds,
+                },
+              },
+            },
+          ],
+        });
+
+      console.log('api result: => ', btcReplaceStateMap);
+
+      return btcReplaceStateMap;
+    },
+    {
+      promise: true,
+      maxAge: timerUtils.getTimeDurationMs({ minute: 3 }),
+      dispose: (value) => {
+        console.log('🥹 缓存过期清理:', value);
+      },
+    },
+  );
 }
 
 export default ServiceHistory;
