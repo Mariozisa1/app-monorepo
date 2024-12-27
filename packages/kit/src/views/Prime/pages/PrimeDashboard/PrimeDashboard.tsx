@@ -13,7 +13,10 @@ import {
   YStack,
 } from '@onekeyhq/components';
 import { ListItem } from '@onekeyhq/kit/src/components/ListItem';
+import platformEnv from '@onekeyhq/shared/src/platformEnv';
+import timerUtils from '@onekeyhq/shared/src/utils/timerUtils';
 
+import useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
 import { useFetchPrimeUserInfo } from '../../hooks/useFetchPrimeUserInfo';
 import { usePrimeAuth } from '../../hooks/usePrimeAuth';
 
@@ -183,16 +186,21 @@ function PrimeSubscriptionPlans() {
 export default function PrimeDashboard() {
   const { login, loginLegacy, logout, privy, getAccessToken, user } =
     usePrimeAuth();
-
+  const navigation = useAppNavigation();
   const { result } = useFetchPrimeUserInfo();
 
   const onConfirm = useCallback(async () => {
+    if (platformEnv.isNative) {
+      // TODO: privy login Modal is conflict with OneKey Modal
+      navigation.popStack();
+      await timerUtils.wait(1000);
+    }
     login();
 
     if (!user?.isLoggedIn) {
       // loginLegacy();
     }
-  }, [login, user?.isLoggedIn]);
+  }, [login, navigation, user?.isLoggedIn]);
 
   const shouldShowConfirmButton = useMemo(() => {
     if (!user?.isLoggedIn) {
@@ -245,9 +253,11 @@ export default function PrimeDashboard() {
             <Button
               onPress={() => {
                 console.log({
-                  ready: privy.ready,
+                  ready: privy.isReady,
                   authenticated: privy.authenticated,
-                  user: privy.user,
+                  userWeb: privy.web?.user,
+                  userNative: privy.native?.user,
+                  userEmail: privy.userEmail,
                 });
               }}
             >

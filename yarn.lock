@@ -3371,6 +3371,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@expo-google-fonts/inter@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "@expo-google-fonts/inter@npm:0.2.3"
+  checksum: 10/434dd414e4d4dd9b61283cc09dfc499d5a4162bcaa39d0ac88cc3664bac0f21d8c54c0be9868b36bcf6d562be077eec6fbe8874274bd447d29d4ee1e988d8682
+  languageName: node
+  linkType: hard
+
 "@expo/bunyan@npm:^4.0.0":
   version: 4.0.0
   resolution: "@expo/bunyan@npm:4.0.0"
@@ -7160,6 +7167,7 @@ __metadata:
     "@babel/core": "npm:^7.20.0"
     "@backpackapp-io/react-native-toast": "npm:0.10.0"
     "@bufgix/react-native-secure-window": "npm:0.1.1"
+    "@expo-google-fonts/inter": "npm:^0.2.3"
     "@formatjs/intl-getcanonicallocales": "npm:^1.9.2"
     "@formatjs/intl-locale": "npm:^2.4.47"
     "@formatjs/intl-pluralrules": "npm:^4.3.3"
@@ -7192,6 +7200,7 @@ __metadata:
     expo-clipboard: "npm:5.0.1"
     expo-crypto: "npm:~12.8.1"
     expo-device: "npm:5.9.3"
+    expo-font: "npm:~11.10.3"
     expo-haptics: "npm:12.6.0"
     expo-image-manipulator: "npm:11.5.0"
     expo-image-picker: "npm:14.5.0"

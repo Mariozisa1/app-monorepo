@@ -1,60 +1,36 @@
 import { useCallback, useMemo } from 'react';
 
-import { usePrivy, useLogin as usePrivyLogin } from '@privy-io/react-auth';
-
 import { Toast } from '@onekeyhq/components';
 import {
   usePrimeInitAtom,
   usePrimePersistAtom,
 } from '@onekeyhq/kit-bg/src/states/jotai/atoms';
+import { NotImplemented } from '@onekeyhq/shared/src/errors';
 import type { IOneKeyError } from '@onekeyhq/shared/src/errors/types/errorTypes';
+import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
+
+import { usePrivyUniversal } from './usePrivyUniversal';
 
 export function usePrimeAuth() {
   const [primePersistAtom, setPrimePersistAtom] = usePrimePersistAtom();
   const [primeInitAtom, setPrimeInitAtom] = usePrimeInitAtom();
 
-  const privy = usePrivy();
-  const {
-    ready,
-    authenticated,
-    user,
-    logout,
-    updateEmail,
-    updatePhone,
-    linkEmail,
-    linkWallet,
-    unlinkEmail,
-    linkPhone,
-    unlinkPhone,
-    unlinkWallet,
-    linkGoogle,
-    unlinkGoogle,
-    linkTwitter,
-    unlinkTwitter,
-    linkDiscord,
-    unlinkDiscord,
-    getAccessToken,
-  } = privy;
+  const privy = usePrivyUniversal();
+  const { logout, isReady, getAccessToken } = privy;
 
-  const { login } = usePrivyLogin({
-    onComplete(
-      user0,
-      isNewUser,
-      wasAlreadyAuthenticated,
-      loginMethod,
-      loginAccount,
-    ) {
-      console.log('privy login complete >>> ', {
-        user0,
-        isNewUser,
-        wasAlreadyAuthenticated,
-        loginMethod,
-        loginAccount,
+  const login = useCallback(() => {
+    if (platformEnv.isNative) {
+      privy.native?.login?.({
+        loginMethods: ['email'],
       });
-    },
-  });
+    } else {
+      privy.web?.login?.({
+        loginMethods: ['email'],
+      });
+    }
+  }, [privy]);
 
   const loginLegacy = useCallback(async () => {
     try {
@@ -70,6 +46,22 @@ export function usePrimeAuth() {
       });
     }
   }, []);
+
+  const updateEmail = useCallback(() => {
+    if (platformEnv.isNative) {
+      throw new NotImplemented('updateEmail is not supported on native');
+    } else {
+      privy.web?.updateEmail?.();
+    }
+  }, [privy]);
+
+  const updatePhone = useCallback(() => {
+    if (platformEnv.isNative) {
+      throw new NotImplemented('updatePhone is not supported on native');
+    } else {
+      privy.web?.updatePhone?.();
+    }
+  }, [privy]);
 
   return useMemo(
     () => ({

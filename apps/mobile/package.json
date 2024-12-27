@@ -27,6 +27,7 @@
   "dependencies": {
     "@backpackapp-io/react-native-toast": "0.10.0",
     "@bufgix/react-native-secure-window": "0.1.1",
+    "@expo-google-fonts/inter": "^0.2.3",
     "@formatjs/intl-getcanonicallocales": "^1.9.2",
     "@formatjs/intl-locale": "^2.4.47",
     "@formatjs/intl-pluralrules": "^4.3.3",
@@ -59,6 +60,7 @@
     "expo-clipboard": "5.0.1",
     "expo-crypto": "~12.8.1",
     "expo-device": "5.9.3",
+    "expo-font": "~11.10.3",
     "expo-haptics": "12.6.0",
     "expo-image-manipulator": "11.5.0",
     "expo-image-picker": "14.5.0",

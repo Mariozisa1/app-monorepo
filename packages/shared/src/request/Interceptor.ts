@@ -11,8 +11,9 @@ import { getDefaultLocale } from '@onekeyhq/shared/src/locale/getDefaultLocale';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import { generateUUID } from '@onekeyhq/shared/src/utils/miscUtils';
 
-import type { InternalAxiosRequestConfig } from 'axios';
 import { headerPlatform } from './InterceptorConsts';
+
+import type { InternalAxiosRequestConfig } from 'axios';
 
 export function normalizeHeaderKey(key: string) {
   return key?.toLowerCase() ?? key;
@@ -53,8 +54,6 @@ export async function checkRequestIsOneKeyDomain({
 }
 
 export const HEADER_REQUEST_ID_KEY = normalizeHeaderKey('X-Onekey-Request-ID');
-
-
 
 export async function getRequestHeaders() {
   const settings = await settingsPersistAtom.get();

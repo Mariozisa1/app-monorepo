@@ -32,6 +32,7 @@ module.exports = [
   'encryptors',
   'txids',
   '_j_msgid',
+  'Reachability',
   'ord',
   'exe',
   'Merkle',

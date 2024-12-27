@@ -1,4 +1,7 @@
-import { PrivyProvider as PrivyProviderBase } from '@privy-io/expo';
+import {
+  PrivyElements,
+  PrivyProvider as PrivyProviderBase,
+} from '@privy-io/expo';
 
 import { usePrivyAuthSyncToAtom } from '../hooks/usePrivyAuthSyncToAtom';
 
@@ -19,6 +22,7 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <PrivyProviderBase appId={appId} clientId={clientId}>
+      <PrivyElements />
       <PrivyAuthSyncToAtom />
       {children}
     </PrivyProviderBase>
