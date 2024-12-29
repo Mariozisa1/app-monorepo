@@ -1428,4 +1428,12 @@ export abstract class VaultBase extends VaultBaseChainOnly {
   }): Promise<boolean> {
     return Promise.resolve(true);
   }
+
+  async getPendingTxsToUpdate({
+    pendingTxs,
+  }: {
+    pendingTxs: IAccountHistoryTx[];
+  }): Promise<IAccountHistoryTx[]> {
+    return Promise.resolve([]);
+  }
 }

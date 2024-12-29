@@ -242,20 +242,41 @@ class ServiceHistory extends ServiceBase {
     let confirmedTxsToSave: IAccountHistoryTx[] = [];
 
     if (isAllNetworks) {
-      const allNetworksParams = accounts.map((account) => ({
-        networkId: account.networkId,
-        accountAddress: account.apiAddress,
-        xpub: account.accountXpub,
-        pendingTxs: pendingTxs.filter((tx) =>
-          isAccountCompatibleWithTx({ account, tx }),
-        ),
-        confirmedTxs: mergedConfirmedTxs.filter((tx) =>
-          isAccountCompatibleWithTx({ account, tx }),
-        ),
-        onChainHistoryTxs: onChainHistoryTxs.filter((tx) =>
-          isAccountCompatibleWithTx({ account, tx }),
-        ),
-      }));
+      const allNetworksParams = await Promise.all(
+        accounts.map(async (account) => {
+          const filteredPendingTxs = pendingTxs.filter((tx) =>
+            isAccountCompatibleWithTx({ account, tx }),
+          );
+          let pendingTxsToModify: IAccountHistoryTx[] = [];
+          try {
+            pendingTxsToModify = await this.getPendingTxsToModify({
+              accountId: account.accountId,
+              networkId: account.networkId,
+              pendingTxs: filteredPendingTxs,
+            });
+          } catch (error) {
+            console.error(
+              `Failed to get pendingTxsToUpdate for account ${account.accountId}:`,
+              error,
+            );
+            pendingTxsToModify = [];
+          }
+          console.log('pendingTxsToModify ====>>>: ', pendingTxsToModify);
+          return {
+            networkId: account.networkId,
+            accountAddress: account.apiAddress,
+            xpub: account.accountXpub,
+            pendingTxs: filteredPendingTxs,
+            confirmedTxs: mergedConfirmedTxs.filter((tx) =>
+              isAccountCompatibleWithTx({ account, tx }),
+            ),
+            onChainHistoryTxs: onChainHistoryTxs.filter((tx) =>
+              isAccountCompatibleWithTx({ account, tx }),
+            ),
+            pendingTxsToModify,
+          };
+        }),
+      );
 
       const updateResult = await this.batchUpdateLocalHistoryTxs(
         allNetworksParams,
@@ -263,6 +284,22 @@ class ServiceHistory extends ServiceBase {
       finalPendingTxs = updateResult.allFinalPendingTxs;
       confirmedTxsToSave = updateResult.allConfirmedTxsToSave;
     } else {
+      let pendingTxsToModify: IAccountHistoryTx[] = [];
+      try {
+        pendingTxsToModify = await this.getPendingTxsToModify({
+          accountId,
+          networkId,
+          pendingTxs,
+        });
+      } catch (error) {
+        console.error(
+          `Failed to get pendingTxsToUpdate for account ${accountId}:`,
+          error,
+        );
+        pendingTxsToModify = [];
+      }
+      console.log('pendingTxsToModify ====>>>: ', pendingTxsToModify);
+
       const updateResult = await this.batchUpdateLocalHistoryTxs([
         {
           accountAddress,
@@ -271,6 +308,7 @@ class ServiceHistory extends ServiceBase {
           pendingTxs,
           confirmedTxs: mergedConfirmedTxs,
           onChainHistoryTxs,
+          pendingTxsToModify,
         },
       ]);
       finalPendingTxs = updateResult.allFinalPendingTxs;
@@ -467,6 +505,7 @@ class ServiceHistory extends ServiceBase {
       onChainHistoryTxs: IAccountHistoryTx[];
       confirmedTxs: IAccountHistoryTx[];
       pendingTxs: IAccountHistoryTx[];
+      pendingTxsToModify: IAccountHistoryTx[];
     }[],
   ) {
     const allConfirmedTxsToSave: IAccountHistoryTx[] = [];
@@ -480,6 +519,7 @@ class ServiceHistory extends ServiceBase {
       confirmedTxs?: IAccountHistoryTx[];
       confirmedTxsToSave?: IAccountHistoryTx[];
       confirmedTxsToRemove?: IAccountHistoryTx[];
+      pendingTxsToModify?: IAccountHistoryTx[];
     }[] = [];
 
     for (const param of params) {
@@ -490,6 +530,7 @@ class ServiceHistory extends ServiceBase {
         onChainHistoryTxs,
         confirmedTxs,
         pendingTxs,
+        pendingTxsToModify,
       } = param;
 
       // Find transactions confirmed through history details query but not in on-chain history, these need to be saved
@@ -564,6 +605,7 @@ class ServiceHistory extends ServiceBase {
         confirmedTxs: [...confirmedTxs, ...nonceHasBeenUsedTxs],
         confirmedTxsToSave: finalConfirmedTxs,
         confirmedTxsToRemove,
+        pendingTxsToModify,
       });
     }
 
@@ -576,6 +618,20 @@ class ServiceHistory extends ServiceBase {
       allNonceHasBeenUsedTxs,
       allFinalPendingTxs,
     };
+  }
+
+  @backgroundMethod()
+  async getPendingTxsToModify(params: {
+    accountId: string;
+    networkId: string;
+    pendingTxs: IAccountHistoryTx[];
+  }) {
+    const { accountId, networkId } = params;
+    const vault = await vaultFactory.getVault({ networkId, accountId });
+    const pendingTxsToUpdate = await vault.getPendingTxsToUpdate({
+      pendingTxs: params.pendingTxs,
+    });
+    return pendingTxsToUpdate;
   }
 
   @backgroundMethod()
@@ -1219,7 +1275,10 @@ class ServiceHistory extends ServiceBase {
 
       console.log('api result: => ', btcReplaceStateMap);
 
-      return btcReplaceStateMap;
+      // return btcReplaceStateMap;
+      return {
+        [txIds[0]]: EBtcF2poolReplaceState.ACCELERATED_PENDING,
+      };
     },
     {
       promise: true,

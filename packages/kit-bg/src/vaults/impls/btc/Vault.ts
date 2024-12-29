@@ -66,12 +66,14 @@ import type {
   IMeasureRpcStatusResult,
 } from '@onekeyhq/shared/types/customRpc';
 import type { IFeeInfoUnit } from '@onekeyhq/shared/types/fee';
+import type { IAccountHistoryTx } from '@onekeyhq/shared/types/history';
 import type { IStakeTxBtcBabylon } from '@onekeyhq/shared/types/staking';
 import type { IDecodedTx, IDecodedTxAction } from '@onekeyhq/shared/types/tx';
 import {
   EBtcF2poolReplaceState,
   EDecodedTxActionType,
   EDecodedTxStatus,
+  EReplaceTxType,
 } from '@onekeyhq/shared/types/tx';
 
 import { VaultBase } from '../../base/VaultBase';
@@ -1465,5 +1467,40 @@ export default class VaultBtc extends VaultBase {
         txid: txId,
       });
     return replaceState === EBtcF2poolReplaceState.NOT_ACCELERATED;
+  }
+
+  override async getPendingTxsToUpdate({
+    pendingTxs,
+  }: {
+    pendingTxs: IAccountHistoryTx[];
+  }): Promise<IAccountHistoryTx[]> {
+    console.log(
+      'BTC: getPendingTxsToUpdate: ===>>>: pendingTxs : ',
+      pendingTxs,
+    );
+    try {
+      const updatedTxs: IAccountHistoryTx[] = [];
+
+      for (const tx of pendingTxs) {
+        const txId = tx.decodedTx.txid;
+        const replaceState =
+          await this.backgroundApi.serviceHistory.getReplaceInfoForBtc({
+            networkId: this.networkId,
+            accountId: this.accountId,
+            txid: txId,
+          });
+        if (replaceState === EBtcF2poolReplaceState.ACCELERATED_PENDING) {
+          updatedTxs.push({
+            ...tx,
+            replacedType: EReplaceTxType.SpeedUp,
+          });
+        }
+      }
+
+      return updatedTxs;
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
 }
