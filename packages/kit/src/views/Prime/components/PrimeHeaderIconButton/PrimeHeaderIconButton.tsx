@@ -15,7 +15,7 @@ export function PrimeHeaderIconButton() {
   const navigation = useAppNavigation();
 
   const onPrimeButtonPressed = useCallback(async () => {
-    navigation.pushModal(EModalRoutes.PrimeModal, {
+    navigation.pushFullModal(EModalRoutes.PrimeModal, {
       screen: EPrimePages.PrimeDashboard,
     });
   }, [navigation]);

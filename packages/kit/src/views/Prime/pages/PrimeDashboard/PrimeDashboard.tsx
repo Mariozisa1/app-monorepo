@@ -1,17 +1,23 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { StyleSheet } from 'react-native';
+
 import type { IKeyOfIcons } from '@onekeyhq/components';
 import {
   Button,
-  Divider,
   Icon,
+  IconButton,
+  LottieView,
   Page,
   SizableText,
   Stack,
+  Theme,
   Toast,
   XStack,
   YStack,
+  useSafeAreaInsets,
 } from '@onekeyhq/components';
+import PrimeBannerBgDark from '@onekeyhq/kit/assets/animations/prime-banner-bg-dark.json';
 import { ListItem } from '@onekeyhq/kit/src/components/ListItem';
 
 import { useFetchPrimeUserInfo } from '../../hooks/useFetchPrimeUserInfo';
@@ -21,16 +27,17 @@ import { PrimeUserInfo } from './PrimeUserInfo';
 
 function PrimeBanner() {
   return (
-    <YStack py="$5" gap="$3" alignItems="center">
-      <Icon
-        size="$16"
-        name="KingVipCrownOutline"
-        //   name="PlaceholderOutline"
-      />
-      <SizableText size="$heading3xl" textAlign="center">
+    <YStack py="$5" gap="$2" alignItems="center">
+      <Icon size="$20" name="OnekeyPrimeDarkColored" />
+      <SizableText size="$heading3xl" mt="$-1" textAlign="center">
         OneKey Prime
       </SizableText>
-      <SizableText size="$bodyLg" color="$textSubdued" textAlign="center">
+      <SizableText
+        size="$bodyLg"
+        maxWidth="$96"
+        textAlign="center"
+        color="$textSubdued"
+      >
         Unlock advanced features to enhance your crypto asset management
         experience.
       </SizableText>
@@ -50,13 +57,12 @@ function PrimeBenefitsItem({
   onPress: () => void;
 }) {
   return (
-    <ListItem
-      drillIn
-      icon={icon}
-      title={title}
-      subtitle={subtitle}
-      onPress={onPress}
-    />
+    <ListItem drillIn onPress={onPress}>
+      <YStack borderRadius="$3" borderCurve="continuous" bg="$brand4" p="$2">
+        <Icon name={icon} size="$6" color="$brand9" />
+      </YStack>
+      <ListItem.Text flex={1} primary={title} secondary={subtitle} />
+    </ListItem>
   );
 }
 
@@ -181,6 +187,7 @@ function PrimeSubscriptionPlans() {
 }
 
 export default function PrimeDashboard() {
+  const { top } = useSafeAreaInsets();
   const { login, loginLegacy, logout, privy, getAccessToken, user } =
     usePrimeAuth();
 
@@ -205,61 +212,89 @@ export default function PrimeDashboard() {
   }, [user?.isLoggedIn, user?.primeSubscription]);
 
   return (
-    <Page scrollEnabled>
-      <Page.Header title="Prime" />
-      <Page.Body>
-        <Stack>
-          <Stack px="$4">
-            <PrimeBanner />
-            {user?.isLoggedIn ? (
-              <>
-                <PrimeUserInfo />
-                <PrimeSubscriptionPlans />
-              </>
-            ) : null}
-          </Stack>
-          <Divider />
-          <PrimeBenefitsList />
-          <XStack>
-            <Button
-              onPress={() => {
-                void loginLegacy();
-              }}
-            >
-              Login Legacy
-            </Button>
-            <Button
-              onPress={() => {
-                void logout();
-              }}
-            >
-              Logout
-            </Button>
-            <Button
-              onPress={() => {
-                void getAccessToken().then(console.log);
-              }}
-            >
-              Get Access Token
-            </Button>
-            <Button
-              onPress={() => {
-                console.log({
-                  ready: privy.ready,
-                  authenticated: privy.authenticated,
-                  user: privy.user,
-                });
-              }}
-            >
-              User Info
-            </Button>
-          </XStack>
+    <>
+      <Theme name="dark">
+        <Stack position="absolute" left="$5" top={top || '$5'} zIndex="$5">
+          <Page.Close>
+            <IconButton icon="CrossedLargeOutline" variant="tertiary" />
+          </Page.Close>
         </Stack>
-      </Page.Body>
-      <Page.Footer
-        onConfirm={shouldShowConfirmButton ? onConfirm : undefined}
-        onConfirmText="Subscribe"
-      />
-    </Page>
+        <Page scrollEnabled>
+          <Page.Header headerShown={false} />
+          <Page.Body>
+            <Stack
+              px="$5"
+              pt="$10"
+              gap="$5"
+              overflow="hidden"
+              borderBottomWidth={StyleSheet.hairlineWidth}
+              borderBottomColor="$borderSubdued"
+            >
+              <YStack
+                position="absolute"
+                top="50%"
+                transform="translateY(-50%)"
+                left={0}
+                right={0}
+                paddingBottom="100%"
+              >
+                <LottieView
+                  position="absolute"
+                  width="100%"
+                  height="100%"
+                  source={PrimeBannerBgDark}
+                />
+              </YStack>
+              <PrimeBanner />
+              {user?.isLoggedIn ? (
+                <>
+                  <PrimeUserInfo />
+                  <PrimeSubscriptionPlans />
+                </>
+              ) : null}
+            </Stack>
+            <PrimeBenefitsList />
+            <XStack>
+              <Button
+                onPress={() => {
+                  void loginLegacy();
+                }}
+              >
+                Login Legacy
+              </Button>
+              <Button
+                onPress={() => {
+                  void logout();
+                }}
+              >
+                Logout
+              </Button>
+              <Button
+                onPress={() => {
+                  void getAccessToken().then(console.log);
+                }}
+              >
+                Get Access Token
+              </Button>
+              <Button
+                onPress={() => {
+                  console.log({
+                    ready: privy.ready,
+                    authenticated: privy.authenticated,
+                    user: privy.user,
+                  });
+                }}
+              >
+                User Info
+              </Button>
+            </XStack>
+          </Page.Body>
+          <Page.Footer
+            onConfirm={shouldShowConfirmButton ? onConfirm : undefined}
+            onConfirmText="Subscribe"
+          />
+        </Page>
+      </Theme>
+    </>
   );
 }
